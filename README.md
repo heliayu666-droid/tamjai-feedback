@@ -1,25 +1,21 @@
-# Tam Jai Customer Feedback Centre · 譚仔顧客回饋中心
+# 譚仔國際 · 顧客回饋中心
 
-HKBU PRAO3086 Group I — Direction 1: The Responder.
+HKBU PRAO3086 Group I — Direction 1: The Responder
 
-Aggregates public comments about Tam Jai International from OpenRice, Xiaohongshu,
-Google Maps and Threads into one ranked triage queue, with theme analysis and a
-per-branch performance map. No reply is ever published by the system.
+匯集 OpenRice、小紅書、Google Maps、Threads 四邊嘅公開評論，排成一個待辦佇列，
+連主題分佈同分店表現地圖。系統唔會代公司對外發言。
 
-## Open it
-Deployed live at the URL shown in the "Deploy" section above this text.
-
-## What is inside
-| File | Role |
+## 檔案
+| 檔 | 用途 |
 |---|---|
-| `app.py` | Entry point — the four views |
-| `landing.py` | Home screen markup |
-| `analyzer.py` | Rule engine: themes, crisis detection, priority score |
-| `naming.py` | Branch-name normalisation and territory lookup |
-| `build_cache.py` | Rebuilds `data/` from the source spreadsheets (not needed to run) |
-| `data/analysed.parquet` | Pre-computed results for 19,055 comments |
+| `app.py` | 入口 · 四個頁签 |
+| `analyzer.py` | 規則引擎：主題分類、危機偵測、優先分 |
+| `naming.py` | 分店名稱歸一化 + 地區判斷 |
+| `data/analysed.parquet` | 19,055 則評論嘅預計算結果 |
 
-## Notes on the numbers
-Sentiment uses each platform's own published rating where one exists; themes and crisis
-flags come from deterministic rules, so results are reproducible and explainable.
-Comments that name no branch are reported separately rather than guessed onto the map.
+## 幾個方法上嘅決定
+- **情緒取自各平台自己公佈嘅評分**，唔係由模型重新猜；只有冇評分嘅來源先靠文字規則
+- **主題用固定清單**，所以今個月同上月可以直接對比
+- **擱置日數只喺 Threads 同小紅書計算**，因為 OpenRice 同 Google Maps 會返回全部歷史評論，
+  一併計算會把存檔誤報成積壓
+- **搜到但同米線店無關嘅內容（例如蔡天鳳案暱稱撞名）會被過濾**，數量喺介面講明
