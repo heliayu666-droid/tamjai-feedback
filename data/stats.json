@@ -1,0 +1,65 @@
+{
+  "window_days": 90,
+  "recent_total": 1489,
+  "latency_measurable": 1234,
+  "total": 19055,
+  "by_source": {
+    "Google Maps": 14794,
+    "OpenRice": 2935,
+    "Threads": 1150,
+    "Xiaohongshu": 176
+  },
+  "by_sentiment": {
+    "irrelevant": 1059,
+    "negative": 4130,
+    "neutral": 4406,
+    "positive": 9460
+  },
+  "crisis": 71,
+  "irrelevant": 1059,
+  "star_only": 9927,
+  "unlocated": 1326,
+  "by_territory_recent": {
+    "HK Island": 6,
+    "Kowloon": 175,
+    "New Territories": 68,
+    "Other": 6,
+    "Unlocated": 1234
+  },
+  "fresh_by_source": {
+    "Google Maps": 223,
+    "OpenRice": 32,
+    "Threads": 1150,
+    "Xiaohongshu": 84
+  },
+  "history_share": {
+    "Google Maps": 0.985,
+    "OpenRice": 0.989,
+    "Threads": 0.0,
+    "Xiaohongshu": 0.523
+  },
+  "by_territory": {
+    "HK Island": 1057,
+    "Kowloon": 11628,
+    "New Territories": 4055,
+    "Other": 957,
+    "Outlying": 32,
+    "Unlocated": 1326
+  },
+  "top_themes": {
+    "taste": 3537,
+    "other": 2583,
+    "portion": 969,
+    "service_attitude": 704,
+    "queue": 631,
+    "price": 427,
+    "staff_behaviour": 321,
+    "cleanliness": 159,
+    "delivery_missing": 101,
+    "delivery_delay": 83,
+    "opening_hours": 51,
+    "menu_availability": 41
+  },
+  "date_min": "2003-01-02 23:28:01",
+  "date_max": "2026-11-02 23:07:16"
+}
