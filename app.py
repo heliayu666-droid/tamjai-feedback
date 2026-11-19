@@ -12,8 +12,10 @@ import json
 from collections import Counter
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
 from naming import is_generic
@@ -236,23 +238,52 @@ else:
               newest=("days_open", "min")).reset_index())
     g["rate"] = (g.neg / g.n * 100).round(1)
 
-    st.subheader(f"{len(g)} 間已識別位置嘅分店")
-    m = px.scatter_mapbox(g, lat="lat", lon="lng", size=g.n.clip(lower=1), color="rate",
-                          color_continuous_scale=["#2E7D32", "#F9A825", "#D9822B", "#C62828"],
-                          range_color=[0, 60], mapbox_style="carto-positron", zoom=10,
-                          center={"lat": 22.31, "lon": 114.16}, hover_name="store",
-                          hover_data=["n", "neg", "rate", "newest"],
-                          labels={"rate": "投訴比率%"})
-    m.update_layout(height=560, margin=dict(l=0, r=0, t=10, b=0))
-    st.plotly_chart(m, use_container_width=True)
-    st.caption("圓越大＝評價越多 · 顏色越紅＝投訴比率越高")
+    # Branch labels repeat across Google Maps listings ("譚仔雲南米線 TamJai Yunnan Mixian"
+    # appears on several sites), so collapse by location and keep the largest sample.
+    g = g.sort_values("n", ascending=False).groupby(["lat", "lng"], as_index=False).first()
 
-    st.subheader("最需要關注嘅分店")
+    # Scattermapbox requires scalar textfont size and numeric marker size; NaN here
+    # raised a hard AttributeError on Streamlit Cloud while working locally.
+    for col in ("n", "neg"):
+        g[col] = pd.to_numeric(g[col], errors="coerce").fillna(0).astype(int)
+    big = g[g.n >= 40].copy()
+    small = g[g.n < 40].copy()
+
+    def scale(v, lo, hi):
+        v = np.asarray(v, dtype=float)
+        return lo + (v - v.min()) / max(1e-6, v.max() - v.min()) * (hi - lo)
+
+    fig = px.scatter_mapbox(
+        big, lat="lat", lon="lng", color="rate",
+        color_continuous_scale=[[0, "#2E7D32"], [0.15, "#F9A825"], [0.25, "#D9822B"], [0.35, "#C62828"]],
+        range_color=[0, 45], zoom=10.3, center={"lat": 22.31, "lon": 114.17},
+        mapbox_style="carto-positron", hover_name="store",
+        hover_data={"n": True, "neg": True, "rate": ":.1f", "newest": True, "lat": False, "lng": False},
+        labels={"rate": "投訴比率%", "n": "評論數", "neg": "投訴", "newest": "最新一則（日前）"})
+    fig.update_traces(marker=dict(size=scale(big.n, 16, 46), opacity=0.9))
+    fig.add_trace(go.Scattermapbox(
+        lat=big.lat, lon=big.lng, mode="text", text=big.n.astype(str),
+        textfont=dict(size=13, color="white"), textposition="middle center",
+        showlegend=False, hoverinfo="skip"))
+    if len(small):
+        fig.add_trace(go.Scattermapbox(
+            lat=small.lat, lon=small.lng, mode="markers",
+            marker=dict(size=8, opacity=0.55, color=small.rate,
+                        colorscale=[[0, "#2E7D32"], [1, "#C62828"]], cmin=0, cmax=45),
+            customdata=small[["store", "n", "rate"]],
+            hovertemplate="%{customdata[0]}<br>%{customdata[1]} 則 · 投訴 %{customdata[2]:.1f}%<extra></extra>",
+            name="樣本較少的分店"))
+    fig.update_layout(height=620, margin=dict(l=0, r=0, t=10, b=0), showlegend=False)
+    st.plotly_chart(fig, use_container_width=True)
+    st.caption("氣泡上的數字＝該地點的公開評論數；顏色由綠至紅代表投訴比率 0–45%。較小的點為樣本不足 40 則的分店。")
+
+    st.subheader(t_map := "最需要關注的分店")
     worst = g[g.n >= 10].sort_values("rate", ascending=False).head(12)[["store", "n", "neg", "rate", "newest"]]
-    worst.columns = ["分店", "評價數", "投訴", "投訴比率%", "最新一則（日前）"]
+    worst.columns = ["分店", "評論數", "投訴", "投訴比率%", "最新一則（日前）"]
     st.dataframe(worst, use_container_width=True, hide_index=True)
-    st.caption("少於 10 則評價嘅分店唔列入排行 —— 三則入面有一則差評係噪音，唔係結論。")
+    st.caption("少於 10 則評論的分店不列入排行——樣本過小時，單一的差評屬噪音而非結論。")
 
-    st.warning(f"另有 **{stats['unlocated']:,} 則無法歸店**（{stats['unlocated']/stats['total']*100:.1f}%）。"
-               "小紅書同 Threads 好多時只講「譚仔」唔講邊間，全港兩百幾間無從判斷。"
-               "呢啲我哋冇估上去，所以地圖唔係完整覆蓋 —— 睇數字之前要知。")
+    st.warning(f"另有 **{stats['unlocated']:,} 則無法歸類到分店**（{stats['unlocated']/stats['total']*100:.1f}%）。"
+               "小紅書與 Threads 的貼文常只提及「譚仔」而未說明分店，而全港有兩百多間門市無從判斷。"
+               "這類記錄沒有被推測歸類，因此地圖並非完整覆蓋——閱讀數字時須留意。")
+

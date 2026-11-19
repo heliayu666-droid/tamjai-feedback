@@ -1,0 +1,167 @@
+"""UI strings for the standalone page, in three languages."""
+
+THEME_TRAD = {
+    "queue": "排隊輪候", "cleanliness": "衛生環境", "service_attitude": "服務態度",
+    "taste": "口味品質", "price": "價格性價比", "portion": "分量",
+    "opening_hours": "營業時間／結業", "delivery_delay": "外送延誤",
+    "delivery_missing": "漏送缺品", "staff_behaviour": "員工行為",
+    "menu_availability": "貨品供應", "other": "其他",
+}
+
+TRAD = {
+    "title": "顧客回饋中心",
+    "brand": "Tam Jai International · Marketing & Communications",
+    "tabs": ["今日工作", "待回覆", "趨勢分析", "分店表現"],
+
+    "hero_lead": "今日有 {pending_neg} 則投訴待跟進，其中 {backlog} 則已擱置超過一週。",
+    "hero_sub": ("最長的一則已等待 {oldest_days} 日，集中於 {oldest_platform}。"
+                 "確認後，回覆内容由負責同事自行貼上平台，系統不會代公司發言。"),
+
+    "m_complaints": "投訴待回覆", "m_complaints_s": "近 90 日內尚未跟進",
+    "m_overweek": "已擱置超過一週", "m_overweek_s": "最舊的一批，建議今日處理",
+    "m_crisis": "需即時轉交營運", "m_crisis_s": "食安／過敏／法律，不由系統擬稿",
+    "m_praise": "正面評價可致謝", "m_praise_s": "低成本維繫客戶關係",
+
+    "h_by_platform": "各平台尚有幾多待回覆",
+    "median_note": ("「中位數」較「平均數」可靠：少數極舊的評論會拉高平均數。"
+                    "Threads 日數較短是由於该平台僅提供近期內容，並不代表處理速度較快。"),
+    "h_hot": "本週討論重點",
+    "hot_cap": "近 90 日共有 {pending_neg} 則投訴，其中寫明原因的 {hot_total} 則方計入上表。",
+    "tip": ("<b>建議優先處理：</b>擱置超過一週的 {backlog} 則，以及 {crisis_live} 則食安相關。"
+            "前者影響品牌觀感，後者涉及合規風險。"),
+    "waited": "中位已擱 {n} 日", "of_which": "其間投訴 {n} 則",
+
+    "f_platform": "全部平台", "f_kind": "全部性質", "f_theme": "全部主題",
+    "f_crisis_only": "只顯示需轉營運", "f_search": "搜尋分店或關鍵字…",
+    "kind_all": "全部性質", "kind_neg": "投訴", "kind_pos": "讚好", "kind_neu": "中性",
+    "shown": "顯示 {a} / {b} 則待辦 · 本次已跟進 {c} 則",
+
+    "score": "優先分", "waiting": "擱置 {n} 日", "reliability": "判讀可靠度",
+    "conf": {"high": "高", "medium": "中", "low": "低"},
+    "no_store": "未有提及分店", "no_text": "（僅提供評分，未附文字）", "untagged": "未分類",
+    "btn_reply": "擬稿回覆", "btn_esc": "轉交營運", "btn_mon": "繼續觀察", "btn_dis": "暫不處理",
+    "view_source": "查看原文",
+    "badge_crisis": "🔴 需即時轉交營運", "badge_neg": "⚠ 投訴",
+    "badge_pos": "✅ 讚好", "badge_neu": "○ 中性",
+    "done_reply": "草稿已備妥，請由本人貼上平台", "done_esc": "已列入本週營運簡報",
+    "done_mon": "保留於觀察名單", "done_dis": "已標記為暫不處理",
+    "demo_note": ("此演示版本不會儲存操作記錄，亦不會發布任何内容。正式系統會將每一步寫入稽核日誌，"
+                  "而最終發布仍须由負責同事在平台上自行完成。"),
+
+    "ins_note": ("全期 {negatives} 則投訴之中，有 <b>{silent_negative} 則僅給出一至兩星而未有文字</b>。"
+                 "下方的原因分佈只代表寫下原因的部分（n = {written}）；其餘不滿確實存在，"
+                 "但原因需由分店跟進方能確定。"),
+    "ins_reasons": "投訴原因分佈（全期）",
+    "ins_cap1": "n = {written} 則附有文字的投訴 · 分類採用固定清單，因此跨月可直接比較",
+    "ins_latency": "投訴擱置時間",
+    "ins_cap2": ("僅計算 Threads 與小紅書（n = {latency}），因為這兩個平台提供的是完整近期清單。"
+                 "OpenRice 與 Google Maps 會一併返回歷史評論，若同樣納入計算，"
+                 "將把存檔記錄誤報為積壓個案。"),
+
+    "map_h": "{branches} 間已識別位置的分店",
+    "map_unlocated": ("<b>另有 {unlocated} 則無法歸類到分店</b>（{pct}%）。"
+                      "小紅書與 Threads 的貼文常只提及「譚仔」而未說明分店，"
+                      "而全港有兩百多間門市無從判斷。這類記錄沒有被推測歸類，"
+                      "因此地圖並非完整覆蓋——閱讀數字時須留意。"),
+    "map_worst": "最需要關注的分店",
+    "map_cols": ["分店", "評論數", "投訴", "投訴比率", "最新一則"],
+    "map_worst_cap": ("少於 10 則評論的分店不列入排行——樣本過小時，單一的差評屬噪音而非結論。"),
+    "ago": "{n} 日前",
+    "legend_size": "圓越大代表評論越多", "legend_colour": "顏色越深代表投訴比率越高",
+
+    "updated": "資料更新", "footer_src": ("來源：OpenRice、小紅書、Google Maps、Threads 之公開評論。"
+                                        "系統只協助篩選與擬稿，不會代替公司對外發言；"
+                                        "所有回覆均须由負責同事本人發出。"),
+    "lang_label": "語言",
+    "unit": "則",
+    "b1": "一週內", "b2": "一至四週", "b3": "一至三個月",
+}
+
+EN = {
+    "title": "Customer Feedback Centre",
+    "tabs": ["Today's Work", "Awaiting Reply", "Trends", "Branch Performance"],
+    "hero_lead": "{pending_neg} complaints are awaiting reply; {backlog} have been open over a week.",
+    "hero_sub": ("The oldest has waited {oldest_days} days, concentrated on {oldest_platform}. "
+                 "Once approved, replies are posted by the responsible colleague — the system never "
+                 "speaks for the company."),
+    "m_complaints": "Complaints open", "m_complaints_s": "Within the last 90 days",
+    "m_overweek": "Waiting over a week", "m_overweek_s": "Oldest first",
+    "m_crisis": "Needs Operations now", "m_crisis_s": "Food safety, allergy or legal — never drafted",
+    "m_praise": "Praise to acknowledge", "m_praise_s": "Low-cost goodwill",
+    "h_by_platform": "Open items by platform",
+    "median_note": ("Median rather than mean: a handful of very old reviews pull the average up. "
+                    "Threads shows fewer days because the platform only surfaces recent content — "
+                    "it does not mean we respond faster."),
+    "h_hot": "This week's themes",
+    "hot_cap": "{pending_neg} complaints in the last 90 days; {hot_total} stated a reason and appear above.",
+    "tip": ("<b>Suggested priority:</b> the {backlog} items open over a week, plus {crisis_live} "
+            "food-safety cases. The first affects perception, the second compliance."),
+    "waited": "Median wait {n} days", "of_which": "{n} complaints among them",
+    "f_platform": "All platforms", "f_kind": "All types", "f_theme": "All themes",
+    "f_crisis_only": "Only items needing Operations", "f_search": "Search branch or keyword…",
+    "kind_neg": "Complaint", "kind_pos": "Praise", "kind_neu": "Neutral",
+    "shown": "Showing {a} of {b} items · {c} actioned this session",
+    "score": "Priority", "waiting": "{n} days open", "reliability": "Read confidence",
+    "conf": {"high": "High", "medium": "Medium", "low": "Low"},
+    "no_store": "Branch not named", "no_text": "(rating only, no text)", "untagged": "Uncategorised",
+    "btn_reply": "Draft reply", "btn_esc": "Escalate", "btn_mon": "Monitor", "btn_dis": "Dismiss",
+    "view_source": "View source",
+    "badge_crisis": "🔴 Needs Operations", "badge_neg": "⚠ Complaint",
+    "badge_pos": "✅ Praise", "badge_neu": "○ Neutral",
+    "done_reply": "Draft ready — post it yourself", "done_esc": "Added to this week's Operations brief",
+    "done_mon": "Kept on watch list", "done_dis": "Marked as not acting",
+    "demo_note": ("This demo stores nothing and publishes nothing. In production every step is written "
+                  "to an audit log, and publishing still happens by hand on the platform."),
+    "ins_note": ("Of {negatives} complaints overall, <b>{silent_negative} gave one or two stars with no words</b>. "
+                 "The reasons below cover only those who wrote something (n = {written}); the rest is real "
+                 "dissatisfaction whose cause needs branch follow-up."),
+    "ins_reasons": "Stated reasons across all periods",
+    "ins_cap1": "n = {written} complaints carrying text · fixed categories, so months compare directly",
+    "ins_latency": "How long complaints have waited",
+    "ins_cap2": ("Counted only for Threads and Xiaohongshu (n = {latency}), which return complete recent lists. "
+                 "OpenRice and Google Maps also return history; including them would report archives as backlog."),
+    "map_h": "{branches} branches with an identified location",
+    "map_unlocated": ("<b>{unlocated} posts could not be attributed to a branch</b> ({pct}%). "
+                      "Xiaohongshu and Threads often say only \"Tam Jai\" without naming a store, out of "
+                      "roughly 219 outlets. These were not guessed onto the map, so coverage is partial."),
+    "map_worst": "Branches needing attention",
+    "map_cols": ["Branch", "Reviews", "Complaints", "Complaint rate", "Latest"],
+    "map_worst_cap": "Branches under 10 reviews are excluded — one bad review at n=3 is noise, not a finding.",
+    "ago": "{n} days ago",
+    "legend_size": "Larger circle = more reviews", "legend_colour": "Darker = higher complaint rate",
+    "updated": "Data updated",
+    "footer_src": ("Public comments from OpenRice, Xiaohongshu, Google Maps and Threads. "
+                   "The system assists with triage and drafting; it never speaks for the company."),
+    "lang_label": "Language",
+    "brand": "Tam Jai International \u00b7 Marketing & Communications",
+    "kind_all": "All types",
+    "unit": "posts",
+    "b1": "Within a week", "b2": "One to four weeks", "b3": "One to three months",
+}
+
+def _build_langs():
+    """Generate Simplified Chinese from Traditional using a vetted conversion table.
+
+    An earlier version used a hand-written 128-character map. It silently produced mixed
+    script — 待回覆 became 待回复 while 繼續觀察 stayed untouched — which is worse than not
+    offering the option at all.
+    """
+    try:
+        from zhconv import convert
+    except ImportError:
+        return {"zh-Hant": TRAD, "en": EN}     # degrade to two languages, never fake it
+
+    def conv(v):
+        if isinstance(v, str):
+            return convert(v, "zh-hans")
+        if isinstance(v, list):
+            return [convert(x, "zh-hans") for x in v]
+        if isinstance(v, dict):
+            return {k: convert(x, "zh-hans") for k, x in v.items()}
+        return v
+
+    hans = {k: conv(v) for k, v in TRAD.items()}
+    return {"zh-Hant": TRAD, "zh-Hans": hans, "en": EN}
+
+
+LANGS = _build_langs()
