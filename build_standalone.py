@@ -29,6 +29,113 @@ def _clean(raw: str) -> str:
     return txt.strip()
 
 
+# Reply templates keyed by theme, two variants each (warm / formal).
+# These encode the brand-voice rules from PRD §5 C4 directly: acknowledge the specific
+# issue, state what happens next, make no unverified promise, thank the customer.
+# No compensation offer, no naming of staff, no claim that an investigation occurred.
+REPLY_TEMPLATES = {
+    "queue": [
+        ("多謝你嘅耐心等候同留言。尖峰時段等位時間較長，我哋明白呢樣影響用餐體驗。"
+         "你提到嘅情況我會轉給相關分店跟進時段安排。如果你再次遇到長時間等位，"
+         "歡迎告知我們具體時間同店舖，方便我哋核實。"),
+        ("稟謝閣下惠顧及寶貴意見。尖峰時段輪候時間偏長，對造成不便深感抱歉。"
+         "我們已將 閣下反映之情況轉達相關門市檢視時段安排。如蒙提供就訪日期與時間，"
+         "我們將可作進一步跟進。"),
+    ],
+    "cleanliness": [
+        ("稟謝 閣下指出有關事項，我們非常重視。環境整潔屬基本要求，未能達到標準我們深表歉意。"
+         "已將情况轉達所涉門市即時檢視。如有其他細節願意提供，我們將認真跟進。"),
+        ("多謝你話我知。整潔係我哋應該做到的基本，你做呢個反映我哋好感謝亦好在意。"
+         "已經將情況交俾相關分店即刻檢查。如果方便，話我知大概時間同去咗邊間，等我哋查清楚。"),
+    ],
+    "delivery_delay": [
+        ("對於是次外送延誤，我哋致以誠摯歉意。食物過咗先至送到，體驗一定唔好。"
+         "我哋會就外賣訂單嘅出餐同配送環節作出檢視。如可提供訂單日期同時間，"
+         "將有助我哋追查具體一單。"),
+        ("對延誤造成之不便，我們深表歉意。確保食物適時送達為我方應有之責任。"
+         "我们正檢視外賣訂單之備餐與配送流程。如能提供的訂單日期與時間，"
+         "我們將可作針對性跟進。"),
+    ],
+    "delivery_missing": [
+        ("很抱歉是次訂單出現缺漏，令你需要額外處理，實在不便。"
+         "我哋會就打包與核對環節作出檢視。如方便，請提供訂單日期同時間，"
+         "等我哋可以查該單嘅實際情況。"),
+        ("就訂單缺漏造成之不便，我們深表歉意。我方正檢視外賣包裝及核對流程，"
+         "以減少同類情況再度發生。如蒙提供訂單資料，我們將跟進了解。"),
+    ],
+    "taste": [
+        ("多謝你分享口味上嘅感受。菜式口味存在個人差異，但你提出嘅一點我哋會當認真對待。"
+         "已將你嘅意見轉給產品團隊參考。如果有更多想講，歡迎隨時通知。"),
+        ("感謝 閣下就食品味道提供之意見。口味雖有個別差異，閣下之反映我們予以重視，"
+         "並已轉達相關團隊作為檢討參考。"),
+    ],
+    "service_attitude": [
+        ("对于你describe嘅接待情況，我哋衷心道歉。員工應對客人有禮係基本要求，"
+         "未做到我哋冇任何藉口。已將事件轉交負責同事跟進。"
+         "如可提供就訪時間同分店，我哋會更具體了解事情。"),
+        ("就接待態度方面造成之不快，我們謹致歉意。以禮待客為我方基本原則，"
+         "此事我們高度重視，已交由相關人員跟進。如蒙提供到訪日期、時間及門市名稱，"
+         "將有助於我們作詳細了解。"),
+    ],
+    "portion": [
+        ("多謝你提出分量方面嘅意見。我哋明白期望與實際有落差會令人失望。"
+         "已將反映轉給相關單位作為檢視參考。若你願意提供具體菜式同日期，"
+         "我可以查返嗰單嘅情況。"),
+        ("就有關份量之分項意見，感謝 閣下提出。我們已將反映轉達相關團隊作檢視參考。"
+         "如能提供菜式名稱及就訪日期，我們將可作進一步了解。"),
+    ],
+    "price": [
+        ("多謝你關於價格嘅意見。我哋明白價錢变动會直接影響消費感受。"
+         "你嘅反映已經記錄並轉給相關團隊參考。"),
+        ("感謝 閣下就定價方面提供之意見。有关反映我們已予記錄，"
+         "並轉呈相關團隊於其後檢討時參考。"),
+    ],
+    "staff_behaviour": [
+        ("你所描述嘅員工行為令你有唔好嘅體驗，我哋真心道歉。"
+         "已將事件轉交負責同事跟進。如可提供時間同分店，我哋會更具體了解。"),
+        ("就有關人員表現導致之不愉快體驗，我們謹致歉意。"
+         "此事已交由相關人員跟進。如蒙提供日期、時間及門市資料，必當详细了解。"),
+    ],
+    "opening_hours": [
+        ("多謝你留意到我哋營業時間方面嘅情況。若你到訪時發現未有如預期開業，"
+         "確實令人掃興。已將你提供嘅資訊轉給相關門市核實。"),
+        ("感謝 閣下就營業時間提供之資訊。如有與公布時間不符之情況，"
+         "我們已轉達相關門市予以核實。"),
+    ],
+    "menu_availability": [
+        ("你想食嘅嘢售罄确实掃興，尤其特意過嚟。我哋會將呢個情況反映給相關門市，"
+         "檢視熱門時段嘅準備量。多謝你話我知。"),
+        ("就 閣下指定貨品供應不足之情況，我們深表遺憾。"
+         "已將反映轉達相關門市，以便檢視熱門時段之備貨安排。"),
+    ],
+}
+
+def _to_hant(text):
+    """Force reply text to Traditional before shipping.
+
+    Templates were authored by hand and picked up stray Simplified forms (们, 对, 变, 况)
+    plus one variant glyph (峰→峯). Normalising here means a typo in source cannot reach
+    a customer-facing draft.
+    """
+    try:
+        from zhconv import convert
+        out = convert(text, "zh-hant")
+        # 峯 is an orthographic variant of 峰, not a simplified form; the converter
+        # prefers it but modern HK usage is 峰. Revert that one substitution.
+        return out.replace("尖峯", "尖峰").replace("峯會", "峰會")
+    except ImportError:
+        return text
+
+
+def _draft_for(themes):
+    """Attach the first matching theme's two variants; crisis items get none."""
+    for th in themes:
+        if th in REPLY_TEMPLATES:
+            return [_to_hant(v) for v in REPLY_TEMPLATES[th]]
+    return [_to_hant("感謝你的留言。你的意見已經記錄並轉給相關單位參考。"),
+            _to_hant("感謝 閣下之意見。有關事項已予記錄，並轉呈相關單位參照。")]
+
+
 def prepare():
     """Recompute the embedded payload from the analysed parquet."""
     df = pd.read_parquet(ROOT / "data" / "analysed.parquet")
@@ -47,7 +154,8 @@ def prepare():
                  text=_clean(str(r.text))[:400],
                  themes=[TZ.get(t,t) for t in r.themes], senti=r.sentiment, crisis=bool(r.crisis),
                  pr=round(float(r.priority),1), days=int(r.days), conf=r.confidence,
-                 url=r.url if isinstance(r.url,str) else "") for _, r in pool.iterrows()]
+                 url=r.url if isinstance(r.url,str) else "",
+                 drafts=_draft_for(list(r.themes))) for _, r in pool.iterrows()]
 
     # ---- the four numbers a communications manager actually works against
     neg_live = live[live.sentiment=="negative"]
@@ -90,7 +198,9 @@ def prepare():
                 buckets=[["b1", int((meas.days <= 7).sum())],
                          ["b2", int(((meas.days > 7) & (meas.days <= 30)).sum())],
                          ["b3", int(((meas.days > 30) & (meas.days <= 90)).sum())]],
-                negatives=len(neg_all), written=len(written))
+                negatives=len(neg_all), written=len(written),
+                districts=json.loads((ROOT / "data" / "districts.json").read_text())
+                          if (ROOT / "data" / "districts.json").exists() else [])
 
 
 data = json.dumps(prepare(), ensure_ascii=False)
@@ -100,6 +210,8 @@ themes = json.dumps(THEMES, ensure_ascii=False)
 html = """<!DOCTYPE html>
 <html lang="zh-Hant"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <title id="pageTitle">譚仔 · 顧客回饋中心</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -150,6 +262,43 @@ footer{margin-top:30px;font-size:12px;color:#8A94A6;line-height:1.7}
 a{color:#C8102E}
 .split{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px}
 @media(max-width:900px){.split{grid-template-columns:1fr}}
+.dpanel{margin-top:13px;padding:14px;background:#FBF9F6;border:1px solid #E7E2DA;border-radius:10px}
+.dpanel h4{font-size:13px;margin:0 0 4px;color:#1A1A1A}
+.rules{font-size:11.5px;color:#8A94A6;margin-bottom:11px}
+.dv{background:#fff;border:1px solid #EAE5DD;border-radius:9px;padding:11px 13px;margin-bottom:9px}
+.dvhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.dvhead span{font-size:11.5px;font-weight:700;color:#6B5D4A;letter-spacing:.3px}
+.dv p{font-size:13.5px;line-height:1.65;color:#2A3140;margin:0}
+.cpy{padding:5px 14px;border:1px solid #C8102E;background:#fff;color:#C8102E;border-radius:7px;
+  cursor:pointer;font-size:12px;font-weight:700}
+.cpy.ok{background:#2E7D32;border-color:#2E7D32;color:#fff}
+.hint{font-size:11.5px;color:#8A94A6;line-height:1.55}
+#leaflet{height:520px;border-radius:11px;overflow:hidden;border:1px solid #E7E2DA;margin:12px 0}
+.pin span{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;
+  color:#fff;font-weight:700;font-size:12px;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.28)}
+.pin.r1 span{background:#5FA777}.pin.r2 span{background:#F2C14E;color:#3A3122}
+.pin.r3 span{background:#E07A3F}.pin.r4 span{background:#C62828}
+.leaflet-container{background:#EDEAE4;font-family:inherit}
+.offnote{padding:26px;text-align:center;color:#8A94A6;font-size:13px;background:#F7F4EF;border-radius:10px}
+.dimtext{color:#8A94A6;margin-left:6px}
+.grid-map{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:16px 0}
+.cell{min-height:104px;border-radius:10px;background:#F7F4EF}
+.blk{color:#fff;padding:12px 14px;display:flex;flex-direction:column;justify-content:center;transition:transform .15s,box-shadow .15s}
+.blk:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(0,0,0,.18)}
+.bn{font-size:12.5px;font-weight:700;line-height:1.3}
+.bv{font-size:27px;font-weight:700;margin:4px 0 2px;letter-spacing:-.5px}
+.bs{font-size:11.5px;opacity:.92}
+.lgd{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:#5A6272;margin:4px 0 8px}
+.lgd i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.vm{display:flex;gap:7px;margin-bottom:14px}
+.vmb{padding:7px 15px;border:1px solid #DDD6CC;background:#fff;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:600;color:#5A6272}
+.vmb.on{background:#C8102E;color:#fff;border-color:#C8102E}
+.cmp{display:flex;align-items:center;gap:12px;padding:10px 13px;border-bottom:1px solid #F1EDE6;font-size:12.5px;flex-wrap:wrap}
+.cmp b{color:#1A1A1A}
+.cmp .dim{color:#8A94A6}
+.cmp .tgls{margin-left:auto;display:flex;gap:5px}
+.cmp .tgls i{background:#F3EFE8;color:#6B5D4A;font-style:normal;font-size:11px;padding:2px 8px;border-radius:4px}
+.tbl td.tx{max-width:330px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:#5A6272}
 .kpi em{display:block;font-size:11.5px;color:#8A94A6;font-style:normal;margin-top:4px;line-height:1.4}
 .cap{font-size:11.5px;color:#8A94A6;margin-top:12px;line-height:1.6}
 .row2{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid #F1EDE6;font-size:14px}
@@ -197,10 +346,10 @@ function srcName(k){
   return k==='Xiaohongshu'?'小紅書':k;}
 function themeName(k){const m=THEMES[LANG]||THEMES["zh-Hant"];return m[k]||k;}
 function badge(r){
-  if(r.crisis) return '<span class="badge b-crisis">'+esc(t('badge_crisis'))+'</span>';
-  return {negative:'<span class="badge b-neg">'+esc(t('badge_neg'))+'</span>',
-          positive:'<span class="badge b-pos">'+esc(t('badge_pos'))+'</span>'}[r.senti]
-         || '<span class="badge b-neu">'+esc(t('badge_neu'))+'</span>';
+  if(r.crisis) return '<span class="badge b-crisis">'+t('badge_crisis')+'</span>';
+  return {negative:'<span class="badge b-neg">'+t('badge_neg')+'</span>',
+          positive:'<span class="badge b-pos">'+t('badge_pos')+'</span>'}[r.senti]
+         || '<span class="badge b-neu">'+t('badge_neu')+'</span>';
 }
 function fillHero(){
   const lead=document.getElementById('heroLead');
@@ -222,68 +371,136 @@ function srcBars(){
 }
 function hotRows(){
   return D.hot.map(function(h,i){
-    return '<div class="row2"><span class="rank">'+(i+1)+'</span><span class="nm">'+esc(themeName(h[0]))+'</span><b>'+h[1]+' '+esc(t('unit'))+'</b></div>';
+    return '<div class="row2"><span class="rank">'+(i+1)+'</span><span class="nm">'+esc(themeName(h[0]))+'</span><b>'+h[1]+' '+t('unit')+'</b></div>';
   }).join('');
 }
 function renderHome(){
     const html=''
    +'<div class="kpis">'
-   +'<div class="kpi"><b>'+D.pending_neg+'</b><span>'+esc(t('m_complaints'))+'</span><em>'+esc(t('m_complaints_s'))+'</em></div>'
-   +'<div class="kpi"><b style="color:#B0342A">'+D.backlog+'</b><span>'+esc(t('m_overweek'))+'</span><em>'+esc(t('m_overweek_s'))+'</em></div>'
-   +'<div class="kpi"><b style="color:'+(D.crisis_live?'#C8102E':'#256D46')+'">'+D.crisis_live+'</b><span>'+esc(t('m_crisis'))+'</span><em>'+esc(t('m_crisis_s'))+'</em></div>'
-   +'<div class="kpi"><b style="color:#256D46">'+D.pending_pos+'</b><span>'+esc(t('m_praise'))+'</span><em>'+esc(t('m_praise_s'))+'</em></div>'
+   +'<div class="kpi"><b>'+D.pending_neg+'</b><span>'+t('m_complaints')+'</span><em>'+t('m_complaints_s')+'</em></div>'
+   +'<div class="kpi"><b style="color:#B0342A">'+D.backlog+'</b><span>'+t('m_overweek')+'</span><em>'+t('m_overweek_s')+'</em></div>'
+   +'<div class="kpi"><b style="color:'+(D.crisis_live?'#C8102E':'#256D46')+'">'+D.crisis_live+'</b><span>'+t('m_crisis')+'</span><em>'+t('m_crisis_s')+'</em></div>'
+   +'<div class="kpi"><b style="color:#256D46">'+D.pending_pos+'</b><span>'+t('m_praise')+'</span><em>'+t('m_praise_s')+'</em></div>'
    +'</div>'
    +'<div class="split">'
-     +'<div class="chart"><h2>'+esc(t('h_by_platform'))+'</h2>'+srcBars()
-       +'<div class="cap">'+esc(t('median_note'))+'</div></div>'
-     +'<div class="chart"><h2>'+esc(t('h_hot'))+'</h2>'+hotRows()
+     +'<div class="chart"><h2>'+t('h_by_platform')+'</h2>'+srcBars()
+       +'<div class="cap">'+t('median_note')+'</div></div>'
+     +'<div class="chart"><h2>'+t('h_hot')+'</h2>'+hotRows()
        +'<div class="cap">'+esc(fmt(t('hot_cap'),{pending_neg:D.pending_neg,hot_total:D.hot_total}))+'</div>'
        +'<div class="tip">'+fmt(t('tip'),{backlog:D.backlog,crisis_live:D.crisis_live})+'</div>'
      +'</div>'
    +'</div>';
   document.getElementById('home').innerHTML=html;
 }
- function renderTriage(list){
+ let vmMode=localStorage.getItem("tj_vm")||"card";
+function renderTriage(list){
  if(!list)list=D.rows;
- const srcs=[...new Set(D.rows.map(r=>r.src))];
- const ths=[...new Set(D.rows.flatMap(r=>r.themes))];
- document.getElementById('triage').innerHTML=`
- <div class="filters">
-  <select id="fSrc"><option value="">'+esc(t('f_platform'))+'</option>${srcs.map(s=>`<option>${esc(s)}</option>`).join('')}</select>
-  <select id="fS"><option value="">'+esc(t('f_kind'))+'</option><option value="negative">${esc(t('kind_neg'))}</option><option value="positive">${esc(t('kind_pos'))}</option><option value="neutral">${esc(t('kind_neu'))}</option></select>
-  <select id="fT"><option value="">'+esc(t('f_theme'))+'</option>${ths.map(t=>`<option>${esc(t)}</option>`).join('')}</select>
-  <label style="align-self:center;font-size:13px"><input type="checkbox" id="fC"> ${esc(t("f_crisis_only"))}</label>
-  <input type="search" id="fQ" placeholder="${esc(t('f_search'))}" style="flex:1;min-width:150px">
- </div>
- <div style="font-size:13px;color:#5A6272;margin-bottom:12px">${esc(t('shown')).replace('{a}','<b id="cnt">'+list.length+'</b>').replace('{b}',D.rows.length).replace('{c}','<b id="logn">'+Object.keys(log).length+'</b>')}</div>
- <div id="cards">${list.map((r,i)=>card(r,i)).join('')}</div>`;
- ['fSrc','fS','fT','fC','fQ'].forEach(id=>document.getElementById(id).oninput=apply);
+ const srcs=[]; D.rows.forEach(function(r){if(srcs.indexOf(r.src)<0)srcs.push(r.src);});
+ const ths=[]; D.rows.forEach(function(r){r.themes.forEach(function(x){if(ths.indexOf(x)<0)ths.push(x)})});
+ const el=document.getElementById('triage');
+ el.innerHTML=''
+  +'<div class="filters">'
+    +'<select id="fSrc"><option value="">'+esc(t('f_platform'))+'</option>'
+      +srcs.map(function(x){return '<option>'+esc(x)+'</option>'}).join('')+'</select>'
+    +'<select id="fS"><option value="">'+esc(t('f_kind'))+'</option>'
+      +'<option value="negative">'+esc(t('kind_neg'))+'</option>'
+      +'<option value="positive">'+esc(t('kind_pos'))+'</option>'
+      +'<option value="neutral">'+esc(t('kind_neu'))+'</option></select>'
+    +'<select id="fT"><option value="">'+esc(t('f_theme'))+'</option>'
+      +ths.map(function(x){return '<option>'+esc(x)+'</option>'}).join('')+'</select>'
+    +'<label style="align-self:center;font-size:13px"><input type="checkbox" id="fC"> '
+      +esc(t('f_crisis_only'))+'</label>'
+    +'<input type="search" id="fQ" placeholder="'+esc(t('f_search'))+'" style="flex:1;min-width:150px">'
+  +'</div>'
+  +'<div style="font-size:13px;color:#5A6272;margin-bottom:12px">'
+    +esc(t('shown')).replace('{a}','<b id="cnt">'+list.length+'</b>')
+      .replace('{b}',D.rows.length).replace('{c}','<b id="logn">'+Object.keys(log).length+'</b>')
+  +'</div>'
+  +'<div class="vm" id="vmBar">'
+    +[['compact',t('vm_compact')],['card',t('vm_card')],['table',t('vm_table')]].map(function(m){
+       return '<button class="vmb'+(vmMode===m[0]?' on':'')+'" data-m="'+m[0]+'">'+esc(m[1])+'</button>'}).join('')
+  +'</div>'
+  +'<div id="cards">'+renderList(list)+'</div>';
+ ['fSrc','fS','fT','fC','fQ'].forEach(function(id){document.getElementById(id).oninput=apply});
+ document.querySelectorAll('#vmBar .vmb').forEach(function(btn){btn.onclick=function(){
+   vmMode=btn.dataset.m; localStorage.setItem("tj_vm",vmMode); renderTriage();}});
 }
-function card(r,i){const key=r.url||('row'+i);
- return `<div class="card ${r.crisis?'crisis':''}" data-i="${i}">
- <div class="meta"><span class="src">${esc(srcName(r.src))}</span><b>${esc(r.store)||esc(t('no_store'))}</b><span>${esc(r.date)}</span>
- <span>${esc(t('score'))} <b>${r.pr}</b></span><span>${esc(fmt(t('waiting'),{n:r.days}))}</span><span>${esc(t('reliability'))} ${ t('conf')[r.conf]||r.conf }</span>${badge(r)}</div>
- <div class="body">${esc(r.text)||esc(t('no_text'))}</div>
- <div class="tags">${r.themes.map(t=>`<span>${esc(t)}</span>`).join('')}</div>
- <div class="acts">
-  <button class="btn" data-a="reply" ${r.crisis?'disabled':''}>'+esc(t('btn_reply'))+'</button>
-  <button class="btn" data-a="esc">'+esc(t('btn_esc'))+'</button>
-  <button class="btn" data-a="mon">'+esc(t('btn_mon'))+'</button>
-  <button class="btn" data-a="ign">'+esc(t('btn_dis'))+'</button>
-  <span class="done" data-done></span>
-  ${r.url&&r.url.startsWith('http')?`<a href="${esc(r.url)}" target="_blank" style="font-size:12px">${esc(t('view_source'))} ↗</a>`:''}
- </div></div>`}
-
+function renderList(list){
+ if(vmMode==="table"){
+   return '<table class="tbl"><tr>'+t('cols').map(function(c){return '<th>'+esc(c)+'</th>'}).join('')+'</tr>'
+     +list.map(function(r){return '<tr><td>'+esc(srcName(r.src))+'</td><td>'+(esc(r.store)||esc(t('no_store')))
+        +'</td><td>'+esc(r.date)+'</td><td>'+r.pr+'</td><td>'+r.days+'</td><td>'+badge(r)
+        +'</td><td class="tx">'+esc(String(r.text||'').slice(0,90))+'</td></tr>'}).join('')+'</table>';
+ }
+ if(vmMode==="compact"){
+   return list.map(function(r,i){return '<div class="cmp" data-i="'+i+'">'
+     +'<b>'+esc(srcName(r.src))+'</b><span>'+esc(r.store||t('no_store'))+'</span>'
+     +'<span class="dim">'+esc(r.date)+'</span><span class="dim">'+esc(t('score'))+' '+r.pr+'</span>'
+     +'<span class="dim">'+esc(fmt(t('waiting'),{n:r.days}))+'</span>'
+     +'<span class="tgls">'+r.themes.map(function(x){return '<i>'+esc(x)+'</i>'}).join('')+'</span>'
+     +badge(r)+'</div>'}).join('');
+ }
+ return list.map(function(r,i){return card(r,i)}).join('');
+}
+function card(r,i){
+ return '<div class="card'+(r.crisis?' crisis':'')+'" data-i="'+i+'">'
+  +'<div class="meta"><span class="src">'+esc(srcName(r.src))+'</span><b>'+(esc(r.store)||esc(t('no_store')))+'</b>'
+    +'<span>'+esc(r.date)+'</span>'
+    +'<span>'+esc(t('score'))+' <b>'+r.pr+'</b></span>'
+    +'<span>'+esc(fmt(t('waiting'),{n:r.days}))+'</span>'
+    +'<span>'+esc(t('reliability'))+' '+esc((t('conf')[r.conf])||r.conf)+'</span>'
+    +badge(r)+'</div>'
+  +'<div class="body">'+(esc(r.text)||esc(t('no_text')))+'</div>'
+  +'<div class="tags">'+(r.themes.length?r.themes.map(function(x){return '<span>'+esc(x)+'</span>'}).join(' ')
+      :'<span>'+esc(t('untagged'))+'</span>')+'</div>'
+  +'<div class="acts">'
+    +'<button class="btn" data-a="reply"'+(r.crisis?' disabled':'')+'>'+esc(t('btn_reply'))+'</button>'
+    +'<button class="btn" data-a="esc">'+esc(t('btn_esc'))+'</button>'
+    +'<button class="btn" data-a="mon">'+esc(t('btn_mon'))+'</button>'
+    +'<button class="btn" data-a="ign">'+esc(t('btn_dis'))+'</button>'
+    +'<span class="done" data-done></span>'
+    +(r.url&&String(r.url).indexOf('http')===0?'<a href="'+esc(r.url)+'" target="_blank" style="font-size:12px">'+esc(t('view_source'))+' ↗</a>':'')
+  +'</div></div>';
+}
+function openDraft(cardEl,r){
+ const d=r.drafts||[];
+ const wrap=document.createElement('div');wrap.className='dpanel';
+ wrap.innerHTML='<h4>'+esc(t('draft_title'))+'</h4>'
+   +'<div class="rules">'+esc(t('draft_rules')).replace('{n}',(r.themes||[]).join('、'))+'</div>'
+   +d.map(function(v,i){
+     return '<div class="dv"><div class="dvhead"><span>'+esc(i===0?t('v_warm'):t('v_formal'))+'</span>'
+       +'<button class="cpy" data-v="'+i+'">'+esc(t('copy'))+'</button></div>'
+       +'<p>'+esc(v)+'</p></div>'}).join('')
+   +'<div class="hint">'+esc(t('draft_hint'))+'</div>';
+ cardEl.appendChild(wrap);
+ wrap.querySelectorAll('.cpy').forEach(function(btn){btn.onclick=function(){
+   const txt=d[+btn.dataset.v];
+   navigator.clipboard.writeText(txt).then(function(){
+     btn.textContent=t('copied');btn.classList.add('ok');
+     setTimeout(function(){btn.textContent=t('copy');btn.classList.remove('ok')},1800);},
+   function(){ // clipboard API blocked over http: fall back to selection
+     const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);
+     ta.select();try{document.execCommand('copy');btn.textContent=t('copied')}catch(e){btn.textContent=t('copy_fail')}
+     document.body.removeChild(ta);setTimeout(function(){btn.textContent=t('copy')},1800);});
+ }});
+}
 function apply(){
- const s=document.getElementById('fSrc').value,v=document.getElementById('fS').value,
-       t=document.getElementById('fT').value,c=document.getElementById('fC').checked,
+ const sel=document.getElementById('fSrc').value, kind=document.getElementById('fS').value,
+       th=document.getElementById('fT').value, onlyC=document.getElementById('fC').checked,
        q=document.getElementById('fQ').value.toLowerCase();
- const out=D.rows.filter(r=>(!s||r.src===s)&&(!v||r.senti===v)&&(!t||r.themes.includes(t))&&(!c||r.crisis)&&(!q||(r.text+r.store).toLowerCase().includes(q)));
- document.getElementById('cards').innerHTML=out.map((r,i)=>card(r,D.rows.indexOf(r))).join('');
- document.getElementById('cnt').textContent=out.length;
+ const out=D.rows.filter(function(r){
+   return (!sel||r.src===sel) && (!kind||r.senti===kind) && (!th||r.themes.indexOf(th)>=0)
+     && (!onlyC||r.crisis) && (!q||(String(r.text)+String(r.store)).toLowerCase().indexOf(q)>=0);
+ });
+ document.getElementById('cards').innerHTML=renderList(out);
+ const cnt=document.getElementById('cnt'); if(cnt) cnt.textContent=out.length;
  bind();
 }
-function bind(){document.querySelectorAll('#cards .btn:not(:disabled)').forEach(b=>b.onclick=e=>{
+function bind(){document.querySelectorAll('#cards .btn[data-a="reply"]:not(:disabled)').forEach(b=>b.onclick=function(e){
+ const c=e.target.closest('.card'),i=+c.dataset.i,r=D.rows[i];
+ if(c.querySelector('.dpanel')){c.querySelector('.dpanel').remove();return;}
+ openDraft(c,r);});
+document.querySelectorAll('#cards .btn:not([data-a="reply"]):not(:disabled)').forEach(b=>b.onclick=e=>{
  const cardEl=e.target.closest('.card'),i=+cardEl.dataset.i,r=D.rows[i],key=(r.url||'row'+i)+':'+e.target.dataset.a;
  if(log[key])return; log[key]=1;
  const label={reply:t('done_reply'),esc:t('done_esc'),mon:t('done_mon'),ign:t('done_dis')}[e.target.dataset.a];
@@ -304,22 +521,39 @@ function renderInsight(){
 }
 
 function renderMap(){
- const lats=D.branches.map(b=>b.lat),lngs=D.branches.map(b=>b.lng);
- const la0=Math.min(...lats),la1=Math.max(...lats),lo0=Math.min(...lngs),lo1=Math.max(...lngs);
- const col=r=>r>=50?'#C62828':r>=30?'#D9822B':r>=15?'#F9A825':'#2E7D32';
- const worst=D.branches.filter(b=>b.n>=10).sort((a,b)=>b.rate-a.rate).slice(0,10);
- document.getElementById('map').innerHTML=`
- <div class="chart"><h2>各分店負面比率（${D.branches.length} 間已識別位置）</h2>
- <div class="map">${D.branches.map(b=>{const x=(b.lng-lo0)/(lo1-lo0)*100,y=(1-(b.lat-la0)/(la1-la0))*100;
-  return `<div class="pt" data-t="${esc(b.store)} · ${b.neg}/${b.n} 负面 (${b.rate}%)" style="left:${x}%;top:${y}%;width:${Math.min(30,7+b.n/28)}px;height:${Math.min(30,7+b.n/28)}px;background:${col(b.rate)};opacity:.82"></div>`}).join('')}
- <div style="position:absolute;left:14px;bottom:12px;background:rgba(255,255,255,.92);padding:9px 12px;border-radius:8px;font-size:12px">
-  <span class="dot" style="background:#2E7D32"></span>&lt;15% <span class="dot" style="background:#F9A825;margin-left:8px"></span>15–30% <span class="dot" style="background:#D9822B;margin-left:8px"></span>30–50% <span class="dot" style="background:#C62828;margin-left:8px"></span>&gt;50%　${esc(t('legend_size'))}</div></div>
- <div class="note" style="margin-top:14px">${fmt(t('map_unlocated'),{unlocated:'<b>'+D.stats.unlocated.toLocaleString()+'</b>',pct:(D.stats.unlocated/D.stats.total*100).toFixed(1)})}</div>
- <h3>${esc(t('map_worst'))}</h3>
- <table><tr>${t('map_cols').map(function(x){return '<th>'+esc(x)+'</th>'}).join('')}</tr>
- ${worst.map(b=>`<tr><td>${esc(b.store)}</td><td>${b.n}</td><td>${b.neg}</td><td><b style="color:${col(b.rate)}">${b.rate}%</b></td><td>${esc(fmt(t('ago'),{n:b.newest}))}</td></tr>`).join('')}</table>
- <div class="cap">${esc(t('map_worst_cap'))}</div></div>`;
+ const el=document.getElementById('map');
+ const B=D.branches||[];
+ el.innerHTML='<div class="chart"><h2>'+esc(fmt(t('map_h'),{branches:B.length}))+'</h2>'
+   +'<div id="leaflet"></div>'
+   +'<div class="lgd">'+[[0,"<20%"],[20,"20–25%"],[25,"25–30%"],[30,"≥30%"]].map(function(x){
+       return '<span><i style="background:'+colRate(x[0])+'"></i>'+x[1]+' 投訴</span>'}).join('')
+   +'<span class="dimtext">'+esc(t('legend_size'))+'</span></div>'
+   +'<div class="cap">'+esc(t('map_note'))+'</div></div>'
+   +'<div class="chart"><h2>'+esc(t('map_worst'))+'</h2>'
+   +'<table><tr>'+t('map_cols').map(function(c){return '<th>'+esc(c)+'</th>'}).join('')+'</tr>'
+   +B.filter(function(b){return b.n>=10}).sort(function(a,c){return c.rate-a.rate}).slice(0,12).map(function(d){
+     return '<tr><td>'+esc(d.store)+'</td><td>'+d.n+'</td><td>'+d.neg+'</td>'
+       +'<td><b style="color:'+colRate(d.rate)+'">'+d.rate+'%</b></td>'
+       +'<td>'+esc(fmt(t('ago'),{n:d.newest}))+'</td></tr>'}).join('')+'</table>'
+   +'<div class="cap">'+esc(fmt(t('map_worst_cap')))+'</div>'
+   +'<div class="cap">'+esc(fmt(t('map_unlocated'),{unlocated:D.stats.unlocated.toLocaleString(),
+      pct:(D.stats.unlocated/D.stats.total*100).toFixed(1)}))+'</div></div>';
+
+ if(typeof L==="undefined"){document.getElementById('leaflet').innerHTML='<div class="offnote">'
+   +esc(t('map_offline'))+'</div>';return;}
+ const map=L.map('leaflet',{scrollWheelZoom:false}).setView([22.31,114.17],10);
+ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+   attribution:'© OpenStreetMap contributors', maxZoom:19, crossOrigin:true}).addTo(map);
+ B.forEach(function(d){
+   const size=Math.min(46,22+Math.log(Math.max(1,d.n))*7);
+   const icon=L.divIcon({className:'pin r'+rateBand(d.rate),
+     html:'<span>'+d.n+'</span>',iconSize:[size,size],iconAnchor:[size/2,size/2]});
+   L.marker([d.lat,d.lng],{icon:icon}).addTo(map)
+    .bindPopup('<b>'+esc(d.store)+'</b><br>'+d.n+' 則評論 · '+d.neg+' 則投訴（'+d.rate+'%）');
+ });
 }
+function rateBand(r){return r>=30?"4":r>=25?"3":r>=20?"2":"1";}
+function colRate(r){return r>=30?"#C62828":r>=25?"#E07A3F":r>=20?"#F2C14E":"#5FA777";}
 
 
 function renderTabs(){

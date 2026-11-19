@@ -48,9 +48,8 @@ TRAD = {
     "demo_note": ("此演示版本不會儲存操作記錄，亦不會發布任何内容。正式系統會將每一步寫入稽核日誌，"
                   "而最終發布仍须由負責同事在平台上自行完成。"),
 
-    "ins_note": ("全期 {negatives} 則投訴之中，有 <b>{silent_negative} 則僅給出一至兩星而未有文字</b>。"
-                 "下方的原因分佈只代表寫下原因的部分（n = {written}）；其餘不滿確實存在，"
-                 "但原因需由分店跟進方能確定。"),
+    "ins_note": ("4,130 則投訴裡，{silent_negative} 則只打了星級沒寫原因。"
+                 "下圖統計的是有寫原因的 {written} 則——其餘的不滿確實存在，但要分店跟進才知道原因。"),
     "ins_reasons": "投訴原因分佈（全期）",
     "ins_cap1": "n = {written} 則附有文字的投訴 · 分類採用固定清單，因此跨月可直接比較",
     "ins_latency": "投訴擱置時間",
@@ -74,6 +73,20 @@ TRAD = {
                                         "所有回覆均须由負責同事本人發出。"),
     "lang_label": "語言",
     "unit": "則",
+    "all_option": "全部",
+    "draft_title": "建議回覆（兩種語氣）",
+    "draft_rules": "依據品牌語氣規則生成 · 涉及主題：{n}",
+    "v_warm": "親切口語", "v_formal": "正式書面",
+    "copy": "複製", "copied": "已複製 ✓", "copy_fail": "請手動選取複製",
+    "draft_hint": "系統不會代你發布。複製後請由你本人貼上該平台，並回到本頁記錄發出時間。",
+    "map_note": "圓形上的數字＝該地點的公開評論數；顏色由綠至紅代表投訴比率。可拖曳與縮放查看個別門市。",
+    "map_offline": "地圖底圖需要網路才能載入。目前離線，其餘功能不受影響。",
+    "legend_size": "圓越大＝評論越多",
+
+    "map_h": "{branches} 間已識別位置的分店",
+    "vm_compact": "緊湊", "vm_card": "卡片", "vm_table": "表格",
+    "cols": ["平台", "分店", "日期", "優先分", "擱置日", "性質", "內容"],
+
     "b1": "一週內", "b2": "一至四週", "b3": "一至三個月",
 }
 
@@ -136,6 +149,19 @@ EN = {
     "brand": "Tam Jai International \u00b7 Marketing & Communications",
     "kind_all": "All types",
     "unit": "posts",
+    "all_option": "All",
+    "draft_title": "Suggested reply (two tones)",
+    "draft_rules": "Generated from brand-voice rules · themes: {n}",
+    "v_warm": "Warm / conversational", "v_formal": "Formal / written",
+    "copy": "Copy", "copied": "Copied ✓", "copy_fail": "Select and copy manually",
+    "draft_hint": "Nothing is posted for you. Copy the text, post it yourself on the platform, then log the time here.",
+    "map_note": "Numbers on each circle are that location's public reviews; colour runs green to red with complaint rate. Drag and zoom freely.",
+    "map_offline": "Map tiles need a network connection. Other sections are unaffected.",
+    "legend_size": "Larger circle = more reviews",
+
+    "map_h": "{branches} branches with an identified location",
+    "vm_compact": "Compact", "vm_card": "Cards", "vm_table": "Table",
+    "cols": ["Platform", "Branch", "Date", "Priority", "Days open", "Type", "Text"],
     "b1": "Within a week", "b2": "One to four weeks", "b3": "One to three months",
 }
 

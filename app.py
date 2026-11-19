@@ -19,6 +19,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from naming import is_generic
+from i18n_generated import LANGS, THEMES
 
 ROOT = Path(__file__).parent
 
@@ -71,31 +72,63 @@ df = load()
 stats = json.loads((ROOT / "data" / "stats.json").read_text())
 V = derived(df)
 
-st.sidebar.markdown("**譚仔國際**  \n**顧客回饋中心**")
-view = st.sidebar.radio("導覽", ["今日工作", "待回覆", "趨勢分析", "分店表現"], label_visibility="collapsed")
+LANG = st.sidebar.selectbox(
+    "語言" if True else "",
+    ["繁體中文", "简体中文", "English"],
+    index=0, key="lang_sel", label_visibility="visible")
+CODE = {"繁體中文": "zh-Hant", "简体中文": "zh-Hans", "English": "en"}[LANG]
+
+
+def fmt(text, **vals):
+    for k, v in vals.items():
+        text = str(text).replace("{" + k + "}", str(v))
+    return text
+
+
+def t(key):
+    """Look up a UI string, falling back to Traditional rather than showing a raw key."""
+    L = LANGS.get(CODE, LANGS["zh-Hant"])
+    return L.get(key, LANGS["zh-Hant"].get(key, key))
+
+
+def theme(k):
+    m = THEMES.get(CODE, THEMES["zh-Hant"])
+    return m.get(k, k)
+
+
+def src(name):
+    """Platform names stay as brands in Chinese; Xiaohongshu localises."""
+    if CODE == "en":
+        return "Xiaohongshu" if name == "Xiaohongshu" else name
+    if CODE == "zh-Hans":
+        return "小红书" if name == "Xiaohongshu" else name
+    return "小紅書" if name == "Xiaohongshu" else name
+
+
+st.sidebar.markdown(f"**Tam Jai International**  \n**{t('title')}**")
+TABS = [t("tabs")[i] for i in range(4)]
+view = st.sidebar.radio(t("lang_label") and TABS[0], TABS, label_visibility="collapsed")
 st.sidebar.caption(
-    f"資料更新 {stats['date_max'][:10]}  \n"
-    f"{stats['total']:,} 則公開評論 · 四平台  \n\n"
-    "情緒取自各平台自己公佈嘅評分；主題分類同危機偵測由規則處理，"
-    "所以每次執行結果一樣。  \n系統唔會代公司對外發言。")
+    f"{t('updated')} {stats['date_max'][:10]}  \n"
+    f"{stats['total']:,} {t('unit')} · 4 platforms  \n\n"
+    f"{t('footer_src')}")
 
 # ------------------------------------------------------------------ 今日工作
-if view == "今日工作":
-    st.markdown("## 顧客回饋中心")
+if view == TABS[0]:
+    st.markdown(f"## {t('title')}")
     st.markdown(
-        f"**今日有 {V['pending_neg']} 則投訴等緊跟進，其中 {V['backlog']} 則已擱置超過一週。**  \n"
-        f"最耐嘅已經等咗 **{V['oldest']} 日** · 集中喺 {V['oldest_src']}。"
-        "一經確認，回覆由你本人貼去平台。")
+        "**" + fmt(t("hero_lead"), pending_neg=V["pending_neg"], backlog=V["backlog"]) + "**  \n"
+        + fmt(t("hero_sub"), oldest_days=V["oldest"], oldest_platform=V["oldest_src"]))
 
     c = st.columns(4)
-    c[0].metric("投訴待回覆", V["pending_neg"], help=f"近 {stats['window_days']} 日內、確認同譚仔有關嘅負面意見")
-    c[1].metric("已擱置超過一週", V["backlog"], help="最舊嗰一批，建議今日先處理")
-    c[2].metric("需即時轉交營運", V["crisis"], help="食安／過敏／法律指控，系統唔會擬稿")
-    c[3].metric("讚好可道謝", V["pending_pos"], help="低成本維繫顧客關係")
+    c[0].metric(t("m_complaints"), V["pending_neg"], help=t("m_complaints_s"))
+    c[1].metric(t("m_overweek"), V["backlog"], help=t("m_overweek_s"))
+    c[2].metric(t("m_crisis"), V["crisis"], help=t("m_crisis_s"))
+    c[3].metric(t("m_praise"), V["pending_pos"], help=t("m_praise_s"))
 
     left, right = st.columns(2)
     with left:
-        st.subheader("各平台還有幾多等緊回")
+        st.subheader(t("h_by_platform"))
         rows = sorted(V["per_src"].items(), key=lambda x: -x[1]["open"])
         mx = max(v["open"] for _, v in rows)
         for name, v in rows:
@@ -106,11 +139,10 @@ if view == "今日工作":
                 f"<div style='width:{v['open']/mx*100:.0f}%;height:18px;background:#2F6B45;border-radius:4px'></div></div>"
                 f"<div style='font-size:11.5px;color:#8A94A6'>中位已擱 {v['med']} 日 · 當中投訴 {v['neg']} 則</div>"
                 f"</div>", unsafe_allow_html=True)
-        st.caption("用「中位」唔用「平均」：少數超舊嘅評語會拖高平均數。"
-                   "另外 Threads 日數短係因為该平台本身只提供近期內容，唔代表我哋處理得快。")
+        st.caption(t("median_note"))
 
     with right:
-        st.subheader("呢週大家講緊咩")
+        st.subheader(t("h_hot"))
         for i, (k, n) in enumerate(V["hot"].most_common(6), 1):
             st.markdown(
                 f"<div style='display:flex;align-items:center;padding:7px 0;border-bottom:1px solid #F1EDE6'>"
@@ -118,22 +150,20 @@ if view == "今日工作":
                 f"display:grid;place-items:center;font-size:12px;font-weight:700;margin-right:10px'>{i}</span>"
                 f"<span style='flex:1;font-size:14px'>{THEME_ZH.get(k, k)}</span>"
                 f"<b style='color:#C8102E'>{n} 則</b></div>", unsafe_allow_html=True)
-        st.caption(f"近 {stats['window_days']} 日共 {V['pending_neg']} 則投訴，"
-                   f"其中有寫低原因嘅 {V['hot_written']} 則先計入上表。全期分佈請去「趨勢分析」。")
+        st.caption(fmt(t("hot_cap"), pending_neg=V["pending_neg"], hot_total=V["hot_written"]))
 
-    st.info(f"**建議今早先處理：** 擱置超過一週嘅 {V['backlog']} 則，以及 {V['crisis']} 則食安相關。"
-            "前者影響觀感，後者影響牌照。")
+    st.info("**" + t("tip").replace("<b>建議優先處理：</b>", "").strip() + "**")
 
 # ------------------------------------------------------------------ 待回覆
-elif view == "待回覆":
-    st.header("待回覆")
+elif view == TABS[1]:
+    st.header(TABS[1])
     pool = V["neg"].sort_values("priority", ascending=False).head(500)
 
     names = sorted({SRC_ZH.get(s, s) for s in V["live"].source})
-    f_src = st.multiselect("平台", names, default=names)
-    f_theme = st.selectbox("主題", ["全部"] + sorted({THEME_ZH.get(t, t) for ts in pool.themes for t in ts}))
-    f_only_crisis = st.checkbox("只睇需轉營運", False)
-    q = st.text_input("搜尋分店或關鍵字", "")
+    f_src = st.multiselect(t("f_platform"), names, default=names)
+    f_theme = st.selectbox(t("f_theme"), [t("all_option")] + sorted({THEME_ZH.get(t, t) for ts in pool.themes for t in ts}))
+    f_only_crisis = st.checkbox(t("f_crisis_only"), False)
+    q = st.text_input(t("f_search"), "")
 
     work = pool.copy()
     work["src_zh"] = work.source.map(SRC_ZH)
@@ -151,48 +181,46 @@ elif view == "待回覆":
 
     st.caption(f"顯示 {len(work)} / {len(pool)} 則 · 按 嚴重度 × 擱置日數 × 互動量 排序")
 
-    CONF = {"high": "高", "medium": "中", "low": "低"}
+    CONF = t("conf")
     for _, r in work.head(40).iterrows():
         with st.container(border=True):
             h = st.columns([1, 1.4, 0.9, 0.9, 1.1, 1.3])
             h[0].markdown(f"**{SRC_ZH.get(r.source, r.source)}**")
-            h[1].markdown(r.store if isinstance(r.store, str) and r.store.strip() else "未提及分店")
+            h[1].markdown(r.store if isinstance(r.store, str) and r.store.strip() else t("no_store"))
             h[2].markdown(r.date.strftime("%Y-%m-%d") if pd.notna(r.date) else "")
             h[3].markdown(f"優先分 **{r.priority:.0f}**")
-            h[4].markdown(f"擱置 {int(r.days_open)} 日")
-            h[5].markdown("🔴 需即時轉交營運" if bool(r.crisis) else
-                          {"negative": "⚠ 投訴", "positive": "✅ 讚好"}.get(r.sentiment, "○ 中性"))
+            h[4].markdown(fmt(t("waiting"), n=int(r.days_open)))
+            h[5].markdown(t("badge_crisis") if bool(r.crisis) else
+                          {"negative": t("badge_neg"), "positive": t("badge_pos")}.get(r.sentiment, t("badge_neu")))
 
             txt = (r.text or "").strip().replace("\n", " ")
-            st.markdown(txt[:300] + ("…" if len(txt) > 300 else "") or "（只給咗評分，冇留低文字）")
-            tags = " ".join(f"`{THEME_ZH.get(t, t)}`" for t in r.themes) or "`未分類`"
-            st.caption(f"{tags}   ·   判讀可靠度：{CONF.get(r.confidence, r.confidence)}")
+            st.markdown(txt[:300] + ("…" if len(txt) > 300 else "") or t('no_text'))
+            tags = " ".join(f"`{THEME_ZH.get(t, t)}`" for t in r.themes) or f"`{t('untagged')}`"
+            st.caption(f"{tags}   ·   {t('reliability')}：{CONF.get(r.confidence, r.confidence)}")
 
             b = st.columns([1, 1, 1, 1, 2])
-            b[0].button("擬稿回覆", disabled=bool(r.crisis), key=f"rp{abs(hash((r.url, str(r.text))))}")
-            b[1].button("轉交營運", key=f"es{abs(hash((r.url, str(r.text))))}")
-            b[2].button("繼續觀察", key=f"mo{abs(hash((r.url, str(r.text))))}")
-            b[3].button("暫不處理", key=f"ig{abs(hash((r.url, str(r.text))))}")
+            b[0].button(t("btn_reply"), disabled=bool(r.crisis), key=f"rp{abs(hash((r.url, str(r.text))))}")
+            b[1].button(t("btn_esc"), key=f"es{abs(hash((r.url, str(r.text))))}")
+            b[2].button(t("btn_mon"), key=f"mo{abs(hash((r.url, str(r.text))))}")
+            b[3].button(t("btn_dis"), key=f"ig{abs(hash((r.url, str(r.text))))}")
             if isinstance(r.url, str) and r.url.startswith("http"):
                 b[4].markdown(f"[睇原文 ↗]({r.url})")
 
-    st.warning("呢個演示版唔會儲存你嘅點擊，亦唔會發布任何內容。實際系統會將每一步寫入稽核日誌，"
-               "而最終發布仍要由負責同事自己去平台貼文。")
+    st.warning(t("demo_note"))
 
 # ------------------------------------------------------------------ 趨勢分析
-elif view == "趨勢分析":
-    st.header("趨勢分析")
+elif view == TABS[2]:
+    st.header(TABS[2])
     neg_all = df[df.relevant & (df.sentiment == "negative")]
     written = neg_all[neg_all.text.str.strip().str.len() >= 5]
     silent = len(neg_all) - len(written)
 
-    st.info(f"全期 {len(neg_all):,} 則投訴之中，有 **{silent:,} 則只打咗一兩星、冇寫原因**（主要係 Google Maps）。"
-            f"下面嘅分佈只代表寫低原因嗰部分（n = {len(written):,}）；其餘嘅不滿存在，"
-            "但原因要靠分店跟進先知道。")
+    st.info(fmt(t("ins_note"), negatives=f"{len(neg_all):,}",
+                silent_negative=f"{silent:,}", written=f"{len(written):,}"))
 
     a, b = st.columns(2)
     with a:
-        st.subheader("投訴原因分佈（全期）")
+        st.subheader(t("ins_reasons"))
         tc = Counter(t for ts in written.themes for t in ts if t != "other")
         s = pd.Series(dict(tc)).sort_values().tail(9)
         adf = pd.DataFrame({"count": s.values, "theme": [THEME_ZH.get(i, i) for i in s.index]})
@@ -200,7 +228,7 @@ elif view == "趨勢分析":
                      color_discrete_sequence=["#2F6B45"], labels={"theme": "", "count": "則數"})
         fig.update_layout(height=420, margin=dict(l=10, r=20, t=20, b=20))
         st.plotly_chart(fig, use_container_width=True)
-        st.caption(f"n = {len(written):,} 則有文字嘅投訴 · 分類用固定清單，所以今個月同上月可以直接對比")
+        st.caption(fmt(t("ins_cap1"), written=f"{len(written):,}"))
 
     with b:
         st.subheader("主題隨時間變化")
@@ -215,7 +243,7 @@ elif view == "趨勢分析":
         fig.update_layout(height=420, margin=dict(l=10, r=10, t=20, b=20), legend_title="")
         st.plotly_chart(fig, use_container_width=True)
 
-    st.subheader("投訴擱置咗幾耐")
+    st.subheader(t("ins_latency"))
     meas = df[df.latency_measurable & df.relevant & (df.sentiment == "negative")]
     buckets = ["一週內", "一至四週", "一至三個月"]
     ldf = pd.DataFrame({"age": buckets, "comments": [
@@ -226,12 +254,11 @@ elif view == "趨勢分析":
                  labels={"age": "", "comments": "則數"})
     fig.update_layout(height=280, margin=dict(l=10, r=10, t=20, b=20))
     st.plotly_chart(fig, use_container_width=True)
-    st.caption(f"只計 Threads 同小紅書（n = {len(meas):,}）——呢兩個平台畀嘅係完整近期清單。"
-               "OpenRice 同 Google Maps 會連歷史評論一齊返回，如果一併計算，會把存檔誤報成積壓。")
+    st.caption(fmt(t("ins_cap2"), latency=f"{len(meas):,}"))
 
 # ------------------------------------------------------------------ 分店表現
 else:
-    st.header("分店表現")
+    st.header(TABS[3])
     geo = df[df.lat.notna() & ~df.store.map(is_generic)].copy()
     g = (geo.groupby(["store", "lat", "lng"])
          .agg(n=("text", "size"), neg=("sentiment", lambda x: int((x == "negative").sum())),
@@ -257,7 +284,7 @@ else:
         big, lat="lat", lon="lng", color="rate",
         color_continuous_scale=[[0, "#2E7D32"], [0.15, "#F9A825"], [0.25, "#D9822B"], [0.35, "#C62828"]],
         range_color=[0, 45], zoom=10.3, center={"lat": 22.31, "lon": 114.17},
-        mapbox_style="carto-positron", hover_name="store",
+        mapbox_style="open-street-map", hover_name="store",
         hover_data={"n": True, "neg": True, "rate": ":.1f", "newest": True, "lat": False, "lng": False},
         labels={"rate": "投訴比率%", "n": "評論數", "neg": "投訴", "newest": "最新一則（日前）"})
     fig.update_traces(marker=dict(size=scale(big.n, 16, 46), opacity=0.9))
@@ -275,9 +302,9 @@ else:
             name="樣本較少的分店"))
     fig.update_layout(height=620, margin=dict(l=0, r=0, t=10, b=0), showlegend=False)
     st.plotly_chart(fig, use_container_width=True)
-    st.caption("氣泡上的數字＝該地點的公開評論數；顏色由綠至紅代表投訴比率 0–45%。較小的點為樣本不足 40 則的分店。")
+    st.caption(t("map_note"))
 
-    st.subheader(t_map := "最需要關注的分店")
+    st.subheader(t("map_worst"))
     worst = g[g.n >= 10].sort_values("rate", ascending=False).head(12)[["store", "n", "neg", "rate", "newest"]]
     worst.columns = ["分店", "評論數", "投訴", "投訴比率%", "最新一則（日前）"]
     st.dataframe(worst, use_container_width=True, hide_index=True)
