@@ -11,7 +11,7 @@ THEME_TRAD = {
 TRAD = {
     "title": "顧客回饋中心",
     "brand": "Tam Jai International · Marketing & Communications",
-    "tabs": ["今日工作", "待回覆", "趨勢分析", "分店表現"],
+    "tabs": ["今日工作", "待回覆", "已處理", "匯入數據", "趨勢分析", "分店表現"],
 
     "hero_lead": "今日有 {pending_neg} 則投訴待跟進，其中 {backlog} 則已擱置超過一週。",
     "hero_sub": ("最長的一則已等待 {oldest_days} 日，集中於 {oldest_platform}。"
@@ -74,6 +74,20 @@ TRAD = {
     "lang_label": "語言",
     "unit": "則",
     "all_option": "全部",
+    "done_h": "已處理", "done_empty": "本次尚無處理記錄。在「待回覆」中對某則評論執行動作後，會自動出現在這裡。",
+    "done_note": "這些項目已從待辦佇列移出。記錄儲存在此瀏覽器，重新整理不會消失。",
+    "more_than": "另有", "clear_done": "清除本次處理記錄",
+    "clear_confirm": "確定要清除所有處理記錄？這不會影響原始數據。",
+    "feed_h": "匯入新數據",
+    "feed_intro": "將新的公開評論加入待辦佇列。資料在本機解析，不會上傳到任何伺服器。",
+    "feed_paste": "直接貼上", "feed_file": "上傳 CSV 檔案",
+    "feed_ph": "每行一則：平台,日期,分店,內容\nOpenRice,2026-11-20,Mong Kok,等咗一個鐘先有枱…",
+    "feed_go": "加入佇列", "feed_tpl": "下載 CSV 範本",
+    "feed_ok": "已加入 {n} 則評論至待辦佇列。", "feed_none": "未識別到有效行。請確認格式為：平台,日期,分店,內容",
+    "feed_empty": "請先貼上內容或選擇檔案。", "feed_nofile": "請選擇一個 CSV 檔案。",
+    "feed_note": "格式：平台,日期(YYYY-MM-DD),分店名稱,評論內容。第一行可為標題，會被自動忽略。",
+
+    "brand_short": "譚仔",
     "draft_title": "建議回覆（兩種語氣）",
     "draft_rules": "依據品牌語氣規則生成 · 涉及主題：{n}",
     "v_warm": "親切口語", "v_formal": "正式書面",
@@ -92,7 +106,7 @@ TRAD = {
 
 EN = {
     "title": "Customer Feedback Centre",
-    "tabs": ["Today's Work", "Awaiting Reply", "Trends", "Branch Performance"],
+    "tabs": ["Today's Work", "Awaiting Reply", "Handled", "Import Data", "Trends", "Branch Performance"],
     "hero_lead": "{pending_neg} complaints are awaiting reply; {backlog} have been open over a week.",
     "hero_sub": ("The oldest has waited {oldest_days} days, concentrated on {oldest_platform}. "
                  "Once approved, replies are posted by the responsible colleague — the system never "
@@ -150,6 +164,20 @@ EN = {
     "kind_all": "All types",
     "unit": "posts",
     "all_option": "All",
+    "done_h": "Handled", "done_empty": "Nothing actioned yet. Items you act on in Awaiting Reply appear here.",
+    "done_note": "These have left the pending queue. Records live in this browser and survive a reload.",
+    "more_than": "Plus another", "clear_done": "Clear this session's log",
+    "clear_confirm": "Clear all handling records? Original data is unaffected.",
+    "feed_h": "Import new data",
+    "feed_intro": "Add fresh public comments to the queue. Parsed locally; nothing is uploaded to any server.",
+    "feed_paste": "Paste directly", "feed_file": "Upload CSV file",
+    "feed_ph": "One row per line: platform,date,branch,text\nOpenRice,2026-11-20,Mong Kok,Waited an hour for a table…",
+    "feed_go": "Add to queue", "feed_tpl": "Download CSV template",
+    "feed_ok": "Added {n} comments to the queue.", "feed_none": "No valid rows found. Expected: platform,date,branch,text",
+    "feed_empty": "Paste text or choose a file first.", "feed_nofile": "Please choose a CSV file.",
+    "feed_note": "Format: platform,date(YYYY-MM-DD),branch,comment. A header row is ignored automatically.",
+
+    "brand_short": "Tam Jai",
     "draft_title": "Suggested reply (two tones)",
     "draft_rules": "Generated from brand-voice rules · themes: {n}",
     "v_warm": "Warm / conversational", "v_formal": "Formal / written",

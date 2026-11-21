@@ -130,8 +130,10 @@ FOOD_CONTEXT = re.compile(
     r"外賣|外卖|noodle|restaurant|分店|店鋪|舖位|食飯|開飯|午膳|晚膳|晚餐|午餐|自助餐|buffet|"
     r"排队|排隊|取餐|外送|埋單|埋单", re.I)
 MURDER_CTX = re.compile(
-    r"蔡天鳳|蔡天凤|崔麗心|崔丽心|陳港品|陈港品|洗黑錢|洗黑钱|謀殺|谋杀|審訊|审讯|聽審|听审|"
-    r"判處|判处|遺照|遗照|律師.{0,12}盤問|盤問.{0,12}律師")
+    r"蔡天鳳|蔡天凤|Abby ?Choi|崔麗心|崔丽心|陳港品|陈港品|鄺氏|邝氏|鄺家|邝家|洗黑錢|洗黑钱|"
+    r"謀殺|谋杀|碎屍|碎尸|審訊|审讯|聽審|听审|判處|判处|遺照|遗照|龍尾|大埔.{0,6}龍尾|"
+    r"遇人不淑|毀屍|灭口|人證|供稱|控方|辯方|案件審|綑屍|iron ?maiden|"
+    r"律師.{0,14}盤問|盤問.{0,14}律師")
 
 
 def is_relevant(text: str, store: str = "") -> bool:
@@ -145,7 +147,10 @@ def is_relevant(text: str, store: str = "") -> bool:
         already came from a branch page (OpenRice, Google Maps) need no keyword at all.
     """
     t = text or ""
-    if MURDER_CTX.search(t) and not BRAND_STRONG.search(t):
+    # The case content names 譚仔 because the defendant's son is nicknamed that, and some
+    # posts also mention 譚仔米線 in hashtag lists. So a brand mention must NOT rescue a
+    # post that is clearly about the trial — the trial signal wins.
+    if MURDER_CTX.search(t):
         return False
     # Branch-bound sources are relevant by construction.
     if store and str(store).strip():
