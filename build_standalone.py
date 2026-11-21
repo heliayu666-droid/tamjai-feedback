@@ -299,6 +299,10 @@ a{color:#C8102E}
 .btn.primary{background:#C8102E;color:#fff;border-color:#C8102E;padding:8px 18px;border-radius:8px;
   cursor:pointer;font-size:13px;font-weight:700;border:1px solid #C8102E}
 .card.acted{opacity:.5;transition:opacity .35s}
+.tags .none{background:#FBE4E4;color:#B0342A}
+.pick{border:1px dashed #C9C2B7;background:#fff;border-radius:6px;font-size:11.5px;padding:3px 7px;
+  color:#8A94A6;cursor:pointer;margin-left:6px}
+.pick:hover{border-color:#C8102E;color:#C8102E}
 #leaflet{height:520px;border-radius:11px;overflow:hidden;border:1px solid #E7E2DA;margin:12px 0}
 .pin span{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;
   color:#fff;font-weight:700;font-size:12px;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.28)}
@@ -364,10 +368,13 @@ function t(key){const L=ALL_LANGS[LANG]||ALL_LANGS["zh-Hant"];
 function fmt(str,vals){return String(str).replace(/\{(\w+)\}/g,function(m,k){return vals[k]!==undefined?vals[k]:m});}
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const log=JSON.parse(localStorage.getItem("tj_log")||"{}");
+let MANUAL=JSON.parse(localStorage.getItem("tj_manual")||"{}");
 function saveLog(){localStorage.setItem("tj_log",JSON.stringify(log));}
 
 function kpi(n,l){return `<div class="kpi"><b>${n}</b><span>${l}</span></div>`}
 const THEMES=__THEMES__;
+const THEME_KEYS=["queue","cleanliness","service_attitude","taste","price","portion",
+  "opening_hours","delivery_delay","delivery_missing","staff_behaviour","menu_availability","other"];
 function srcName(k){
   if(LANG==="en") return k==='Xiaohongshu'?'Xiaohongshu':k;
   if(LANG==="zh-Hans") return k==='Xiaohongshu'?'小红书':k;
@@ -425,6 +432,15 @@ const ICON_CARD='<svg width="17" height="17" viewBox="0 0 17 17"><rect x="1.5" y
 const ICON_TABLE='<svg width="17" height="17" viewBox="0 0 17 17"><path d="M1.5 2.5h14M1.5 7h14M1.5 11.5h14M1.5 15h14" stroke-width="1.6" fill="none"/><path d="M6.5 2.5V15" stroke-width="1.6"/></svg>';
 
 let vmMode=localStorage.getItem("tj_vm")||"card";
+(function(){var m=JSON.parse(localStorage.getItem("tj_manual")||"{}");
+ Object.keys(m).forEach(function(k){var r=D.rows[+k];if(r&&m[k]){
+   r.themes=[themeName(m[k])];r.drafts=DRAFT_BY_THEME[m[k]]||r.drafts;r.conf='high';}});})();
+const DRAFT_BY_THEME={};
+(function(){/* map theme key -> its two variants, sourced from the embedded rows */
+ var seen={};D.rows.forEach(function(r){(r.themes||[]).forEach(function(nm){
+   if(!seen[nm]&&r.drafts&&r.drafts.length)seen[nm]=r.drafts;});});
+ THEME_KEYS.forEach(function(k){var nm=(THEMES["zh-Hant"]||{})[k];if(nm&&seen[nm])DRAFT_BY_THEME[k]=seen[nm];});
+})();
 function renderTriage(list){
  if(!list)list=D.rows;
  const srcs=[]; D.rows.forEach(function(r){if(srcs.indexOf(r.src)<0)srcs.push(r.src);});
@@ -439,6 +455,7 @@ function renderTriage(list){
       +'<option value="positive">'+esc(t('kind_pos'))+'</option>'
       +'<option value="neutral">'+esc(t('kind_neu'))+'</option></select>'
     +'<select id="fT"><option value="">'+esc(t('f_theme'))+'</option>'
+      +'<option value="__none">'+esc(t('unclassified_option'))+'</option>'
       +ths.map(function(x){return '<option>'+esc(x)+'</option>'}).join('')+'</select>'
     +'<label style="align-self:center;font-size:13px"><input type="checkbox" id="fC"> '
       +esc(t('f_crisis_only'))+'</label>'
@@ -485,7 +502,10 @@ function card(r,i){
     +badge(r)+'</div>'
   +'<div class="body">'+(esc(r.text)||esc(t('no_text')))+'</div>'
   +'<div class="tags">'+(r.themes.length?r.themes.map(function(x){return '<span>'+esc(x)+'</span>'}).join(' ')
-      :'<span>'+esc(t('untagged'))+'</span>')+'</div>'
+      :'<span class="none">'+esc(t('untagged'))+'</span>')
+   +'<select class="pick" data-i="'+i+'"><option value="">'+esc(t('assign'))+'</option>'
+   +THEME_KEYS.map(function(k){return '<option value="'+k+'">'+esc(themeName(k))+'</option>'}).join('')
+   +'</select></div>'
   +'<div class="acts">'
     +'<button class="btn" data-a="reply"'+(r.crisis?' disabled':'')+'>'+esc(t('btn_reply'))+'</button>'
     +'<button class="btn" data-a="esc">'+esc(t('btn_esc'))+'</button>'
@@ -545,7 +565,7 @@ function apply(){
  const seen={}; Object.keys(log).forEach(function(k){seen[k.split(':')[0]]=1});
  const out=D.rows.filter(function(r){
    if(seen[D.rows.indexOf(r)])return false;
-   return (!sel||r.src===sel) && (!kind||r.senti===kind) && (!th||r.themes.indexOf(th)>=0)
+   return (!sel||r.src===sel) && (!kind||r.senti===kind) && (!th||(th==='__none'?r.themes.length===0:r.themes.indexOf(th)>=0))
      && (!onlyC||r.crisis) && (!q||(String(r.text)+String(r.store)).toLowerCase().indexOf(q)>=0);
  });
  document.getElementById('cards').innerHTML=renderList(out);
@@ -556,6 +576,11 @@ function bind(){document.querySelectorAll('#cards .btn[data-a="reply"]:not(:disa
  const c=e.target.closest('.card'),i=+c.dataset.i,r=D.rows[i];
  if(c.querySelector('.dpanel')){c.querySelector('.dpanel').remove();return;}
  openDraft(c,r);});
+document.querySelectorAll('#cards .pick').forEach(function(sel){sel.onchange=function(){
+ const c=sel.closest('.card'),i=+c.dataset.i;
+ if(!sel.value)return;
+ D.rows[i].themes=[themeName(sel.value)];D.rows[i].drafts=DRAFT_BY_THEME[sel.value]||DEFAULT_DRAFTS;
+ D.rows[i].conf='high';MANUAL[i]=sel.value;saveManual();renderTriage();};});
 document.querySelectorAll('#cards .btn:not([data-a="reply"]):not(:disabled)').forEach(b=>b.onclick=e=>{
  const cardEl=e.target.closest('.card'),i=+cardEl.dataset.i,r=D.rows[i],key=(r.url||'row'+i)+':'+e.target.dataset.a;
  if(log[key])return; log[key]=1; saveLog();
@@ -584,6 +609,16 @@ function renderFeed(){
    document.getElementById('feedTxt').style.display=paste?'block':'none';
    document.getElementById('feedFile').style.display=paste?'none':'inline-block';}});
 }
+function setThemeFor(i,val){
+ D.rows[i].themes=val?[val]:[];
+ // an assigned theme also selects its reply template, keeping drafts consistent
+ D.rows[i].drafts=DRAFT_BY_THEME[val]||DEFAULT_DRAFTS;
+ if(val)D.rows[i].conf='high';
+ localStorage.setItem("tj_manual",JSON.stringify(MANUAL));
+ MANUAL[i]=val;saveManual();
+ renderTriage();
+}
+function saveManual(){localStorage.setItem("tj_manual",JSON.stringify(MANUAL));}
 function dlTemplate(){
  var rows=[["platform","date","branch","text"],
    ["OpenRice","2026-11-20","Mong Kok","\u7b49\u4e86\u4e00\u500b\u9418\u624d\u6709\u6a71\u4f4d\uff0c\u670d\u52d9\u54e1\u6c92\u5f88\u597d\u5730\u9053\u6b49\u3002"]];
@@ -688,7 +723,7 @@ function applyStatic(){
 const VIEWS=['home','triage','done','feed','insight','map'];let curTab=0;
 function setTab(i){curTab=i;document.querySelectorAll('.tab').forEach((x,j)=>x.classList.toggle('on',j===i));
  VIEWS.forEach((v,j)=>document.getElementById(v).classList.toggle('hide',j!==i));}
-function renderAll(){applyStatic();renderTabs();fillHero();renderHome();renderTriage();bind();renderInsight();renderMap();}
+function renderAll(){applyStatic();renderTabs();fillHero();renderHome();renderTriage();bind();renderDone();renderFeed();renderInsight();renderMap();}
 renderAll();
 </script></body></html>"""
 

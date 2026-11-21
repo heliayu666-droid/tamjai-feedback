@@ -1,5 +1,4 @@
-"""Generated from i18n.py via zhconv with mainland-term overrides.
-   Regenerate after editing i18n.py. Do not hand-edit."""
+"""Generated from i18n.py via zhconv with mainland-term overrides. Do not hand-edit."""
 LANGS = {
  "zh-Hant": {
   "title": "顧客回饋中心",
@@ -32,6 +31,8 @@ LANGS = {
   "f_platform": "全部平台",
   "f_kind": "全部性質",
   "f_theme": "全部主題",
+  "unclassified_option": "未分類",
+  "assign": "歸類…",
   "f_crisis_only": "只顯示需轉營運",
   "f_search": "搜尋分店或關鍵字…",
   "kind_all": "全部性質",
@@ -164,6 +165,8 @@ LANGS = {
   "f_platform": "全部平台",
   "f_kind": "全部性质",
   "f_theme": "全部主题",
+  "unclassified_option": "未分类",
+  "assign": "归类…",
   "f_crisis_only": "只显示需转营运",
   "f_search": "搜寻分店或关键字…",
   "kind_all": "全部性质",
@@ -295,6 +298,8 @@ LANGS = {
   "f_platform": "All platforms",
   "f_kind": "All types",
   "f_theme": "All themes",
+  "unclassified_option": "Uncategorised",
+  "assign": "Categorise…",
   "f_crisis_only": "Only items needing Operations",
   "f_search": "Search branch or keyword…",
   "kind_neg": "Complaint",

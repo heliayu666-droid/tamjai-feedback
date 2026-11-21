@@ -31,7 +31,8 @@ TRAD = {
             "前者影響品牌觀感，後者涉及合規風險。"),
     "waited": "中位已擱 {n} 日", "of_which": "其間投訴 {n} 則",
 
-    "f_platform": "全部平台", "f_kind": "全部性質", "f_theme": "全部主題",
+    "f_platform": "全部平台", "f_kind": "全部性質", "f_theme": "全部主題", "unclassified_option": "未分類",
+    "assign": "歸類…",
     "f_crisis_only": "只顯示需轉營運", "f_search": "搜尋分店或關鍵字…",
     "kind_all": "全部性質", "kind_neg": "投訴", "kind_pos": "讚好", "kind_neu": "中性",
     "shown": "顯示 {a} / {b} 則待辦 · 本次已跟進 {c} 則",
@@ -124,7 +125,8 @@ EN = {
     "tip": ("<b>Suggested priority:</b> the {backlog} items open over a week, plus {crisis_live} "
             "food-safety cases. The first affects perception, the second compliance."),
     "waited": "Median wait {n} days", "of_which": "{n} complaints among them",
-    "f_platform": "All platforms", "f_kind": "All types", "f_theme": "All themes",
+    "f_platform": "All platforms", "f_kind": "All types", "f_theme": "All themes", "unclassified_option": "Uncategorised",
+    "assign": "Categorise…",
     "f_crisis_only": "Only items needing Operations", "f_search": "Search branch or keyword…",
     "kind_neg": "Complaint", "kind_pos": "Praise", "kind_neu": "Neutral",
     "shown": "Showing {a} of {b} items · {c} actioned this session",
