@@ -300,6 +300,9 @@ a{color:#C8102E}
   cursor:pointer;font-size:13px;font-weight:700;border:1px solid #C8102E}
 .card.acted{opacity:.5;transition:opacity .35s}
 .tags .none{background:#FBE4E4;color:#B0342A}
+.addth{border:1px dashed #C9C2B7;background:#fff;color:#8A94A6;border-radius:6px;
+  width:22px;height:22px;font-size:14px;line-height:1;cursor:pointer;margin-left:5px;padding:0}
+.addth:hover{border-color:#C8102E;color:#C8102E}
 .pick{border:1px dashed #C9C2B7;background:#fff;border-radius:6px;font-size:11.5px;padding:3px 7px;
   color:#8A94A6;cursor:pointer;margin-left:6px}
 .pick:hover{border-color:#C8102E;color:#C8102E}
@@ -379,7 +382,6 @@ function srcName(k){
   if(LANG==="en") return k==='Xiaohongshu'?'Xiaohongshu':k;
   if(LANG==="zh-Hans") return k==='Xiaohongshu'?'小红书':k;
   return k==='Xiaohongshu'?'小紅書':k;}
-function themeName(k){const m=THEMES[LANG]||THEMES["zh-Hant"];return m[k]||k;}
 function badge(r){
   if(r.crisis) return '<span class="badge b-crisis">'+t('badge_crisis')+'</span>';
   return {negative:'<span class="badge b-neg">'+t('badge_neg')+'</span>',
@@ -431,6 +433,12 @@ function renderHome(){
 const ICON_CARD='<svg width="17" height="17" viewBox="0 0 17 17"><rect x="1.5" y="1.5" width="6.2" height="6.2" rx="1.6"/><rect x="9.3" y="1.5" width="6.2" height="6.2" rx="1.6"/><rect x="1.5" y="9.3" width="6.2" height="6.2" rx="1.6"/><rect x="9.3" y="9.3" width="6.2" height="6.2" rx="1.6"/></svg>';
 const ICON_TABLE='<svg width="17" height="17" viewBox="0 0 17 17"><path d="M1.5 2.5h14M1.5 7h14M1.5 11.5h14M1.5 15h14" stroke-width="1.6" fill="none"/><path d="M6.5 2.5V15" stroke-width="1.6"/></svg>';
 
+const EXTRA_THEMES=JSON.parse(localStorage.getItem("tj_themes")||"[]");
+function themeOptions(){return THEME_KEYS.concat(EXTRA_THEMES.map(function(x){return x.key}));}
+function themeName(k){
+ const m=THEMES[LANG]||THEMES["zh-Hant"]; if(m[k])return m[k];
+ const ex=EXTRA_THEMES.filter(function(x){return x.key===k})[0];
+ return ex?ex.label:(THEMES["zh-Hant"][k]||k);}
 let vmMode=localStorage.getItem("tj_vm")||"card";
 (function(){var m=JSON.parse(localStorage.getItem("tj_manual")||"{}");
  Object.keys(m).forEach(function(k){var r=D.rows[+k];if(r&&m[k]){
@@ -441,8 +449,26 @@ const DRAFT_BY_THEME={};
    if(!seen[nm]&&r.drafts&&r.drafts.length)seen[nm]=r.drafts;});});
  THEME_KEYS.forEach(function(k){var nm=(THEMES["zh-Hant"]||{})[k];if(nm&&seen[nm])DRAFT_BY_THEME[k]=seen[nm];});
 })();
+function apply(){
+ const sel=document.getElementById('fSrc').value, kind=document.getElementById('fS').value,
+       th=document.getElementById('fT').value, onlyC=document.getElementById('fC').checked,
+       q=document.getElementById('fQ').value.toLowerCase();
+ // items already actioned this session leave the pending queue entirely
+ const done={}; Object.keys(log).forEach(function(k){done[k.split(':')[0]]='1'});
+ const out=D.rows.filter(function(r,idx){
+   if(done[idx])return false;
+   return (!sel||r.src===sel) && (!kind||r.senti===kind)
+     && (!th||(th==='__none'?r.themes.length===0:r.themes.indexOf(th)>=0))
+     && (!onlyC||r.crisis)
+     && (!q||(String(r.text)+String(r.store)).toLowerCase().indexOf(q)>=0);
+ });
+ document.getElementById('cards').innerHTML=renderList(out);
+ const cnt=document.getElementById('cnt'); if(cnt) cnt.textContent=out.length;
+ bind();
+}
 function renderTriage(list){
- if(!list)list=D.rows;
+ if(!list){var dn={};Object.keys(log).forEach(function(k){dn[k.split(':')[0]]='1'});
+   list=D.rows.filter(function(r,i){return !dn[i]});}
  const srcs=[]; D.rows.forEach(function(r){if(srcs.indexOf(r.src)<0)srcs.push(r.src);});
  const ths=[]; D.rows.forEach(function(r){r.themes.forEach(function(x){if(ths.indexOf(x)<0)ths.push(x)})});
  const el=document.getElementById('triage');
@@ -483,14 +509,14 @@ function renderList(list){
         +'</td><td class="tx">'+esc(String(r.text||'').slice(0,90))+'</td></tr>'}).join('')+'</table>';
  }
  if(vmMode==="compact"){
-   return list.map(function(r,i){return '<div class="cmp" data-i="'+i+'">'
+   return list.map(function(r){return '<div class="cmp" data-i="'+D.rows.indexOf(r)+'">'
      +'<b>'+esc(srcName(r.src))+'</b><span>'+esc(r.store||t('no_store'))+'</span>'
      +'<span class="dim">'+esc(r.date)+'</span><span class="dim">'+esc(t('score'))+' '+r.pr+'</span>'
      +'<span class="dim">'+esc(fmt(t('waiting'),{n:r.days}))+'</span>'
      +'<span class="tgls">'+r.themes.map(function(x){return '<i>'+esc(x)+'</i>'}).join('')+'</span>'
      +badge(r)+'</div>'}).join('');
  }
- return list.map(function(r,i){return card(r,i)}).join('');
+ return list.map(function(r){return card(r,D.rows.indexOf(r))}).join('');
 }
 function card(r,i){
  return '<div class="card'+(r.crisis?' crisis':'')+'" data-i="'+i+'">'
@@ -503,8 +529,9 @@ function card(r,i){
   +'<div class="body">'+(esc(r.text)||esc(t('no_text')))+'</div>'
   +'<div class="tags">'+(r.themes.length?r.themes.map(function(x){return '<span>'+esc(x)+'</span>'}).join(' ')
       :'<span class="none">'+esc(t('untagged'))+'</span>')
+   +'<button class="addth" data-i="'+i+'" title="'+esc(t('add_theme'))+'">+</button>'
    +'<select class="pick" data-i="'+i+'"><option value="">'+esc(t('assign'))+'</option>'
-   +THEME_KEYS.map(function(k){return '<option value="'+k+'">'+esc(themeName(k))+'</option>'}).join('')
+   +themeOptions().map(function(k){return '<option value="'+k+'">'+esc(themeName(k))+'</option>'}).join('')
    +'</select></div>'
   +'<div class="acts">'
     +'<button class="btn" data-a="reply"'+(r.crisis?' disabled':'')+'>'+esc(t('btn_reply'))+'</button>'
@@ -538,56 +565,43 @@ function openDraft(cardEl,r){
  }});
 }
 function renderDone(){
- const keys=Object.keys(log);
- const rows=keys.map(function(k){const i=+k.split(":")[0];return {r:D.rows[i],a:k.split(":")[1]}}).filter(function(x){return x.r});
  const el=document.getElementById('done');
- if(!rows.length){el.innerHTML='<div class="chart"><h2>'+esc(t('done_h'))+'</h2>'
+ // log keys are "<rowIndex>:<action>"; resolve both parts explicitly so an actioned
+ // item reliably appears here and disappears from the pending queue.
+ const entries=Object.keys(log).map(function(k){
+   const p=k.split(':'); return {i:+p[0], a:p[1]};}).filter(function(x){return !isNaN(x.i)&&D.rows[x.i];});
+ if(!entries.length){el.innerHTML='<div class="chart"><h2>'+esc(t('done_h'))+'</h2>'
    +'<div class="empty">'+esc(t('done_empty'))+'</div></div>';return;}
  const groups={reply:[],esc:[],mon:[],ign:[]};
- rows.forEach(function(x){(groups[x.a]=groups[x.a]||[]).push(x.r)});
- const meta={reply:['badge_pos',t('btn_reply')],esc:['badge_crisis',t('btn_esc')],
-             mon:['badge_neu',t('btn_mon')],ign:['badge_neu',t('btn_dis')]};
- el.innerHTML='<div class="chart"><h2>'+esc(t('done_h'))+'（'+rows.length+'）</h2>'
+ entries.forEach(function(x){(groups[x.a]=groups[x.a]||[]).push(D.rows[x.i]);});
+ const meta={reply:t('btn_reply'),esc:t('btn_esc'),mon:t('btn_mon'),ign:t('btn_dis')};
+ el.innerHTML='<div class="chart"><h2>'+esc(t('done_h'))+'（'+entries.length+'）</h2>'
   +'<div class="cap">'+esc(t('done_note'))+'</div>'
   +Object.keys(groups).filter(function(k){return groups[k].length}).map(function(k){
-    return '<div class="dgrp"><div class="dghead"><span>'+esc(meta[k][1])+'</span><b>'+groups[k].length+'</b></div>'
+    return '<div class="dgrp"><div class="dghead"><span>'+esc(meta[k])+'</span><b>'+groups[k].length+'</b></div>'
      +groups[k].slice(0,40).map(function(r){return '<div class="drow">'
        +'<span class="src">'+esc(srcName(r.src))+'</span><span>'+esc(r.store||t('no_store'))+'</span>'
        +'<span class="dim">'+esc(r.date)+'</span><span class="tx">'+esc(String(r.text||'').slice(0,86))+'</span></div>'}).join('')
-     +(groups[k].length>40?'<div class="cap">… '+esc(t('more_than'))+' '+(groups[k].length-40)+'</div>':'')+'</div>'}).join('')
+     +(groups[k].length>40?'<div class="cap">'+esc(t('more_than'))+' '+(groups[k].length-40)+'</div>':'')+'</div>'}).join('')
   +'<button class="clr" onclick="clearDone()">'+esc(t('clear_done'))+'</button></div>';
 }
 function clearDone(){if(confirm(t('clear_confirm'))){localStorage.removeItem("tj_log");location.reload();}}
-function apply(){
- const sel=document.getElementById('fSrc').value, kind=document.getElementById('fS').value,
-       th=document.getElementById('fT').value, onlyC=document.getElementById('fC').checked,
-       q=document.getElementById('fQ').value.toLowerCase();
- const seen={}; Object.keys(log).forEach(function(k){seen[k.split(':')[0]]=1});
- const out=D.rows.filter(function(r){
-   if(seen[D.rows.indexOf(r)])return false;
-   return (!sel||r.src===sel) && (!kind||r.senti===kind) && (!th||(th==='__none'?r.themes.length===0:r.themes.indexOf(th)>=0))
-     && (!onlyC||r.crisis) && (!q||(String(r.text)+String(r.store)).toLowerCase().indexOf(q)>=0);
- });
- document.getElementById('cards').innerHTML=renderList(out);
- const cnt=document.getElementById('cnt'); if(cnt) cnt.textContent=out.length;
- bind();
-}
 function bind(){document.querySelectorAll('#cards .btn[data-a="reply"]:not(:disabled)').forEach(b=>b.onclick=function(e){
  const c=e.target.closest('.card'),i=+c.dataset.i,r=D.rows[i];
  if(c.querySelector('.dpanel')){c.querySelector('.dpanel').remove();return;}
  openDraft(c,r);});
 document.querySelectorAll('#cards .pick').forEach(function(sel){sel.onchange=function(){
- const c=sel.closest('.card'),i=+c.dataset.i;
- if(!sel.value)return;
- D.rows[i].themes=[themeName(sel.value)];D.rows[i].drafts=DRAFT_BY_THEME[sel.value]||DEFAULT_DRAFTS;
- D.rows[i].conf='high';MANUAL[i]=sel.value;saveManual();renderTriage();};});
+ const i=+sel.dataset.i; if(!sel.value)return; applyThemeToRow(i,sel.value); renderTriage();};});
+ document.querySelectorAll('#cards .addth').forEach(function(btn){btn.onclick=function(){
+   addThemePrompt(+btn.dataset.i);};});
 document.querySelectorAll('#cards .btn:not([data-a="reply"]):not(:disabled)').forEach(b=>b.onclick=e=>{
- const cardEl=e.target.closest('.card'),i=+cardEl.dataset.i,r=D.rows[i],key=(r.url||'row'+i)+':'+e.target.dataset.a;
+ const cardEl=e.target.closest('.card'),i=+cardEl.dataset.i,r=D.rows[i],key=i+':'+e.target.dataset.a;
  if(log[key])return; log[key]=1; saveLog();
  const label={reply:t('done_reply'),esc:t('done_esc'),mon:t('done_mon'),ign:t('done_dis')}[e.target.dataset.a];
  cardEl.querySelector('[data-done]').textContent='✓ '+label;
  document.getElementById('logn').textContent=Object.keys(log).length;
-   var cd=e.target.closest('.card'); if(cd) setTimeout(function(){cd.classList.add('acted')},350);});}
+   cardEl.classList.add('acted');
+   setTimeout(function(){renderTriage();renderDone();},420);});}
 
 function renderFeed(){
  document.getElementById('feed').innerHTML=
@@ -599,8 +613,10 @@ function renderFeed(){
   +'</div>'
   +'<textarea id="feedTxt" placeholder="'+esc(t('feed_ph'))+'"></textarea>'
   +'<input type="file" id="feedFile" accept=".csv,.txt" style="display:none">'
-  +'<div class="frow"><select id="feedSrc">'+['OpenRice','Xiaohongshu','Google Maps','Threads'].map(function(x){
-      return '<option>'+esc(x)+'</option>'}).join('')+'</select>'
+  +'<div class="frow"><select id="feedSrc">'+platformOptions().map(function(x){
+      return '<option value="'+esc(x)+'">'+esc(srcName(x))+'</option>'}).join('')+'</select>'
+    +'<input id="feedNewSrc" placeholder="'+esc(t('feed_newsrc'))+'" style="padding:7px 10px;border:1px solid #DDD6CC;border-radius:8px;font-size:12.5px;width:150px">'
+    +'<button class="btn" onclick="addPlatform()">'+esc(t('feed_addplat'))+'</button>'
     +'<button class="btn primary" onclick="ingest()">'+esc(t('feed_go'))+'</button>'
     +'<button class="btn" onclick="dlTemplate()">'+esc(t('feed_tpl'))+'</button></div>'
   +'<div class="cap" id="feedMsg">'+esc(t('feed_note'))+'</div></div>';
@@ -619,6 +635,33 @@ function setThemeFor(i,val){
  renderTriage();
 }
 function saveManual(){localStorage.setItem("tj_manual",JSON.stringify(MANUAL));}
+const EXTRA_PLATS=JSON.parse(localStorage.getItem("tj_plats")||"[]");
+function platformOptions(){
+ return ["OpenRice","Xiaohongshu","Google Maps","Threads"].concat(EXTRA_PLATS);}
+function addPlatform(){
+ const v=document.getElementById('feedNewSrc').value.trim();
+ if(!v){setFeedMsg(t('feed_noplatform'));return;}
+ if(platformOptions().indexOf(v)>=0){setFeedMsg(t('feed_dupplat'));return;}
+ EXTRA_PLATS.push(v); localStorage.setItem("tj_plats",JSON.stringify(EXTRA_PLATS));
+ document.getElementById('feedNewSrc').value=''; renderFeed(); setFeedMsg(t('feed_platok').replace('{n}',v));
+}
+function addThemePrompt(i){
+ const name=prompt(t('add_theme_ask'));
+ if(!name||!name.trim())return;
+ const key='custom_'+Date.now();
+ EXTRA_THEMES.push({key:key,label:name.trim()});
+ localStorage.setItem("tj_themes",JSON.stringify(EXTRA_THEMES));
+ // every language sees the operator's own label; there is nothing to translate it from
+ ["zh-Hant","zh-Hans","en"].forEach(function(c){if(THEMES[c])THEMES[c][key]=name.trim();});
+ applyThemeToRow(i,key);
+ renderTriage();
+}
+function applyThemeToRow(idx,key){
+ const r=D.rows[idx]; if(!r)return;
+ r.themes=[themeName(key)];
+ r.drafts=DRAFT_BY_THEME[key]||DEFAULT_DRAFTS;
+ r.conf='high'; MANUAL[idx]=key; saveManual();
+}
 function dlTemplate(){
  var rows=[["platform","date","branch","text"],
    ["OpenRice","2026-11-20","Mong Kok","\u7b49\u4e86\u4e00\u500b\u9418\u624d\u6709\u6a71\u4f4d\uff0c\u670d\u52d9\u54e1\u6c92\u5f88\u597d\u5730\u9053\u6b49\u3002"]];

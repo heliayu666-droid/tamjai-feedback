@@ -33,6 +33,11 @@ TRAD = {
 
     "f_platform": "全部平台", "f_kind": "全部性質", "f_theme": "全部主題", "unclassified_option": "未分類",
     "assign": "歸類…",
+    "feed_newsrc": "其他平台名稱…", "feed_addplat": "新增平台",
+    "feed_platok": "已加入平台「{n}」，現在可在下拉選單中選擇。",
+    "feed_dupplat": "該平台已在清單中。", "feed_noplatform": "請先輸入平台名稱。",
+    "add_theme": "新增主題分類", "add_theme_ask": "輸入新的主題名稱（例如：湯底濃淡、外卖灑漏）",
+
     "f_crisis_only": "只顯示需轉營運", "f_search": "搜尋分店或關鍵字…",
     "kind_all": "全部性質", "kind_neg": "投訴", "kind_pos": "讚好", "kind_neu": "中性",
     "shown": "顯示 {a} / {b} 則待辦 · 本次已跟進 {c} 則",
@@ -127,6 +132,11 @@ EN = {
     "waited": "Median wait {n} days", "of_which": "{n} complaints among them",
     "f_platform": "All platforms", "f_kind": "All types", "f_theme": "All themes", "unclassified_option": "Uncategorised",
     "assign": "Categorise…",
+    "feed_newsrc": "Other platform name…", "feed_addplat": "Add platform",
+    "feed_platok": "Added platform \"{n}\" — now selectable below.",
+    "feed_dupplat": "That platform is already listed.", "feed_noplatform": "Type a platform name first.",
+    "add_theme": "Add a theme category", "add_theme_ask": "New theme name (e.g. broth strength, spillage)",
+
     "f_crisis_only": "Only items needing Operations", "f_search": "Search branch or keyword…",
     "kind_neg": "Complaint", "kind_pos": "Praise", "kind_neu": "Neutral",
     "shown": "Showing {a} of {b} items · {c} actioned this session",
