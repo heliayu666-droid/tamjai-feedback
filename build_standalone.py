@@ -136,6 +136,25 @@ def _draft_for(themes):
             _to_hant("感謝 閣下之意見。有關事項已予記錄，並轉呈相關單位參照。")]
 
 
+def _theme_platform(written):
+    """First theme per complaint × platform. Every cell is a real count, so bars compare."""
+    w = written.copy()
+    def lead(x):
+        # themes may be a list or a numpy array; a scalar means no theme at all
+        try:
+            seq = list(x)
+        except TypeError:
+            return None
+        return seq[0] if seq else None
+    w["lead_theme"] = [lead(x) for x in w.themes]
+    w = w[w["lead_theme"].notna() & (w["lead_theme"] != "other")]
+    ct = (w.groupby(["lead_theme", "source"]).size().unstack(fill_value=0))
+    order = ct.sum(axis=1).sort_values(ascending=False).index.tolist()
+    return {"themes": [str(k) for k in order],
+            "platforms": list(ct.columns),
+            "cells": [[str(k), str(c), int(ct.loc[k, c])] for k in order for c in ct.columns]}
+
+
 def prepare():
     """Recompute the embedded payload from the analysed parquet."""
     df = pd.read_parquet(ROOT / "data" / "analysed.parquet")
@@ -155,7 +174,8 @@ def prepare():
                  themes=[TZ.get(t,t) for t in r.themes], senti=r.sentiment, crisis=bool(r.crisis),
                  pr=round(float(r.priority),1), days=int(r.days), conf=r.confidence,
                  url=r.url if isinstance(r.url,str) else "",
-                 drafts=_draft_for(list(r.themes))) for _, r in pool.iterrows()]
+                 drafts=_draft_for(list(r.themes)),
+                 rid=f"r{idx}") for idx, (_, r) in enumerate(pool.iterrows())]
 
     # ---- the four numbers a communications manager actually works against
     neg_live = live[live.sentiment=="negative"]
@@ -195,9 +215,9 @@ def prepare():
                 oldest_platform=(neg_live.sort_values("days", ascending=False).iloc[0].source
                                  if len(neg_live) else "—"),
                 hot_total=int(sum(hot.values())),
-                buckets=[["b1", int((meas.days <= 7).sum())],
-                         ["b2", int(((meas.days > 7) & (meas.days <= 30)).sum())],
-                         ["b3", int(((meas.days > 30) & (meas.days <= 90)).sum())]],
+                # Waiting-time buckets had only ~4 measurable rows — too few to compare.
+                # Theme-by-platform gives every bar a usable denominator instead.
+                cross=_theme_platform(written),
                 negatives=len(neg_all), written=len(written),
                 districts=json.loads((ROOT / "data" / "districts.json").read_text())
                           if (ROOT / "data" / "districts.json").exists() else [])
@@ -306,6 +326,13 @@ a{color:#C8102E}
 .pick{border:1px dashed #C9C2B7;background:#fff;border-radius:6px;font-size:11.5px;padding:3px 7px;
   color:#8A94A6;cursor:pointer;margin-left:6px}
 .pick:hover{border-color:#C8102E;color:#C8102E}
+.crow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F5F2EC;font-size:13px}
+.cnm{width:110px;flex:none;color:#2A3140}
+.ctrack{flex:1;display:flex;gap:2px;height:18px}
+.cseg{height:18px;border-radius:3px;min-width:3px}
+.crow b{width:44px;text-align:right;color:#1A1A1A}
+.flash{margin-top:9px;padding:9px 12px;background:#FFF4E5;border:1px solid #E07A3F;
+  border-radius:8px;font-size:12.5px;color:#8A4B1C}
 #leaflet{height:520px;border-radius:11px;overflow:hidden;border:1px solid #E7E2DA;margin:12px 0}
 .pin span{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;
   color:#fff;font-weight:700;font-size:12px;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.28)}
@@ -356,7 +383,7 @@ a{color:#C8102E}
 <div id="done" class="hide"></div>
 <div id="feed" class="hide"></div>
 <div id="insight" class="hide"></div><div id="map" class="hide"></div>
-<footer><span id="brandLine"></span><br><span id="footNote"></span></footer>
+
 </div>
 <script>
 const DEFAULT_DRAFTS=[["感謝你的留言。你的意見已經記錄並轉給相關單位參考。",
@@ -372,6 +399,9 @@ function fmt(str,vals){return String(str).replace(/\{(\w+)\}/g,function(m,k){ret
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const log=JSON.parse(localStorage.getItem("tj_log")||"{}");
 let MANUAL=JSON.parse(localStorage.getItem("tj_manual")||"{}");
+// restore manual categories by rid so a reloaded page keeps them
+Object.keys(MANUAL).forEach(function(rid){var r=findRow(rid);
+ if(r&&MANUAL[rid]){r.themes=[themeName(MANUAL[rid])];r.drafts=DRAFT_BY_THEME[MANUAL[rid]]||r.drafts;r.conf='high';}});
 function saveLog(){localStorage.setItem("tj_log",JSON.stringify(log));}
 
 function kpi(n,l){return `<div class="kpi"><b>${n}</b><span>${l}</span></div>`}
@@ -421,9 +451,8 @@ function renderHome(){
    +'</div>'
    +'<div class="split">'
      +'<div class="chart"><h2>'+t('h_by_platform')+'</h2>'+srcBars()
-       +'<div class="cap">'+t('median_note')+'</div></div>'
+       +'</div></div>'
      +'<div class="chart"><h2>'+t('h_hot')+'</h2>'+hotRows()
-       +'<div class="cap">'+esc(fmt(t('hot_cap'),{pending_neg:D.pending_neg,hot_total:D.hot_total}))+'</div>'
        +'<div class="tip">'+fmt(t('tip'),{backlog:D.backlog,crisis_live:D.crisis_live})+'</div>'
      +'</div>'
    +'</div>';
@@ -439,6 +468,9 @@ function themeName(k){
  const m=THEMES[LANG]||THEMES["zh-Hant"]; if(m[k])return m[k];
  const ex=EXTRA_THEMES.filter(function(x){return x.key===k})[0];
  return ex?ex.label:(THEMES["zh-Hant"][k]||k);}
+(function(){var m=JSON.parse(localStorage.getItem("tj_manual")||"{}");
+ Object.keys(m).forEach(function(rid){var r=findRow(rid);
+   if(r&&m[rid]){r.themes=[themeName(m[rid])];r.drafts=DRAFT_BY_THEME[m[rid]]||r.drafts;r.conf='high';}});})();
 let vmMode=localStorage.getItem("tj_vm")||"card";
 (function(){var m=JSON.parse(localStorage.getItem("tj_manual")||"{}");
  Object.keys(m).forEach(function(k){var r=D.rows[+k];if(r&&m[k]){
@@ -456,7 +488,7 @@ function apply(){
  // items already actioned this session leave the pending queue entirely
  const done={}; Object.keys(log).forEach(function(k){done[k.split(':')[0]]='1'});
  const out=D.rows.filter(function(r,idx){
-   if(done[idx])return false;
+   if(done[r.rid])return false;
    return (!sel||r.src===sel) && (!kind||r.senti===kind)
      && (!th||(th==='__none'?r.themes.length===0:r.themes.indexOf(th)>=0))
      && (!onlyC||r.crisis)
@@ -468,7 +500,7 @@ function apply(){
 }
 function renderTriage(list){
  if(!list){var dn={};Object.keys(log).forEach(function(k){dn[k.split(':')[0]]='1'});
-   list=D.rows.filter(function(r,i){return !dn[i]});}
+   list=D.rows.filter(function(r){return !dn[r.rid]});}
  const srcs=[]; D.rows.forEach(function(r){if(srcs.indexOf(r.src)<0)srcs.push(r.src);});
  const ths=[]; D.rows.forEach(function(r){r.themes.forEach(function(x){if(ths.indexOf(x)<0)ths.push(x)})});
  const el=document.getElementById('triage');
@@ -509,17 +541,17 @@ function renderList(list){
         +'</td><td class="tx">'+esc(String(r.text||'').slice(0,90))+'</td></tr>'}).join('')+'</table>';
  }
  if(vmMode==="compact"){
-   return list.map(function(r){return '<div class="cmp" data-i="'+D.rows.indexOf(r)+'">'
+   return list.map(function(r){return '<div class="cmp" data-rid="'+r.rid+'">'
      +'<b>'+esc(srcName(r.src))+'</b><span>'+esc(r.store||t('no_store'))+'</span>'
      +'<span class="dim">'+esc(r.date)+'</span><span class="dim">'+esc(t('score'))+' '+r.pr+'</span>'
      +'<span class="dim">'+esc(fmt(t('waiting'),{n:r.days}))+'</span>'
      +'<span class="tgls">'+r.themes.map(function(x){return '<i>'+esc(x)+'</i>'}).join('')+'</span>'
      +badge(r)+'</div>'}).join('');
  }
- return list.map(function(r){return card(r,D.rows.indexOf(r))}).join('');
+ return list.map(function(r){return card(r)}).join('');
 }
-function card(r,i){
- return '<div class="card'+(r.crisis?' crisis':'')+'" data-i="'+i+'">'
+function card(r){
+ return '<div class="card'+(r.crisis?' crisis':'')+'" data-rid="'+r.rid+'">'
   +'<div class="meta"><span class="src">'+esc(srcName(r.src))+'</span><b>'+(esc(r.store)||esc(t('no_store')))+'</b>'
     +'<span>'+esc(r.date)+'</span>'
     +'<span>'+esc(t('score'))+' <b>'+r.pr+'</b></span>'
@@ -529,8 +561,8 @@ function card(r,i){
   +'<div class="body">'+(esc(r.text)||esc(t('no_text')))+'</div>'
   +'<div class="tags">'+(r.themes.length?r.themes.map(function(x){return '<span>'+esc(x)+'</span>'}).join(' ')
       :'<span class="none">'+esc(t('untagged'))+'</span>')
-   +'<button class="addth" data-i="'+i+'" title="'+esc(t('add_theme'))+'">+</button>'
-   +'<select class="pick" data-i="'+i+'"><option value="">'+esc(t('assign'))+'</option>'
+   +'<button class="addth" title="'+esc(t('add_theme'))+'">+</button>'
+   +'<select class="pick"><option value="">'+esc(t('assign'))+'</option>'
    +themeOptions().map(function(k){return '<option value="'+k+'">'+esc(themeName(k))+'</option>'}).join('')
    +'</select></div>'
   +'<div class="acts">'
@@ -569,14 +601,14 @@ function renderDone(){
  // log keys are "<rowIndex>:<action>"; resolve both parts explicitly so an actioned
  // item reliably appears here and disappears from the pending queue.
  const entries=Object.keys(log).map(function(k){
-   const p=k.split(':'); return {i:+p[0], a:p[1]};}).filter(function(x){return !isNaN(x.i)&&D.rows[x.i];});
+   const p=k.split(':'); return {r:findRow(p[0]), a:p[1]};}).filter(function(x){return x.r;});
  if(!entries.length){el.innerHTML='<div class="chart"><h2>'+esc(t('done_h'))+'</h2>'
    +'<div class="empty">'+esc(t('done_empty'))+'</div></div>';return;}
  const groups={reply:[],esc:[],mon:[],ign:[]};
- entries.forEach(function(x){(groups[x.a]=groups[x.a]||[]).push(D.rows[x.i]);});
+ entries.forEach(function(x){(groups[x.a]=groups[x.a]||[]).push(x.r);});
  const meta={reply:t('btn_reply'),esc:t('btn_esc'),mon:t('btn_mon'),ign:t('btn_dis')};
  el.innerHTML='<div class="chart"><h2>'+esc(t('done_h'))+'（'+entries.length+'）</h2>'
-  +'<div class="cap">'+esc(t('done_note'))+'</div>'
+  +'</div>'
   +Object.keys(groups).filter(function(k){return groups[k].length}).map(function(k){
     return '<div class="dgrp"><div class="dghead"><span>'+esc(meta[k])+'</span><b>'+groups[k].length+'</b></div>'
      +groups[k].slice(0,40).map(function(r){return '<div class="drow">'
@@ -587,21 +619,23 @@ function renderDone(){
 }
 function clearDone(){if(confirm(t('clear_confirm'))){localStorage.removeItem("tj_log");location.reload();}}
 function bind(){document.querySelectorAll('#cards .btn[data-a="reply"]:not(:disabled)').forEach(b=>b.onclick=function(e){
- const c=e.target.closest('.card'),i=+c.dataset.i,r=D.rows[i];
+ const c=e.target.closest('.card'),r=findRow(c.dataset.rid);
+ if(!r){flash(c,t('err_missing'));return;}
  if(c.querySelector('.dpanel')){c.querySelector('.dpanel').remove();return;}
  openDraft(c,r);});
 document.querySelectorAll('#cards .pick').forEach(function(sel){sel.onchange=function(){
- const i=+sel.dataset.i; if(!sel.value)return; applyThemeToRow(i,sel.value); renderTriage();};});
+ if(!sel.value)return; applyThemeToRow(sel.closest('.card').dataset.rid,sel.value); renderTriage();};});
  document.querySelectorAll('#cards .addth').forEach(function(btn){btn.onclick=function(){
-   addThemePrompt(+btn.dataset.i);};});
+   addThemePrompt(btn.closest('.card').dataset.rid);};});
 document.querySelectorAll('#cards .btn:not([data-a="reply"]):not(:disabled)').forEach(b=>b.onclick=e=>{
- const cardEl=e.target.closest('.card'),i=+cardEl.dataset.i,r=D.rows[i],key=i+':'+e.target.dataset.a;
- if(log[key])return; log[key]=1; saveLog();
+ const cardEl=e.target.closest('.card'),r=findRow(cardEl.dataset.rid),key=r?r.rid+':'+e.target.dataset.a:null;
+ if(!r||!key){flash(cardEl,t('err_missing'));return;}
+ if(log[key]){flash(cardEl,t('already_done'));return;} log[key]=1; saveLog();
  const label={reply:t('done_reply'),esc:t('done_esc'),mon:t('done_mon'),ign:t('done_dis')}[e.target.dataset.a];
  cardEl.querySelector('[data-done]').textContent='✓ '+label;
  document.getElementById('logn').textContent=Object.keys(log).length;
    cardEl.classList.add('acted');
-   setTimeout(function(){renderTriage();renderDone();},420);});}
+   setTimeout(function(){renderTriage();renderDone();renderHome();},380);});}
 
 function renderFeed(){
  document.getElementById('feed').innerHTML=
@@ -656,12 +690,17 @@ function addThemePrompt(i){
  applyThemeToRow(i,key);
  renderTriage();
 }
-function applyThemeToRow(idx,key){
- const r=D.rows[idx]; if(!r)return;
+function applyThemeToRow(rid,key){
+ const r=findRow(rid); if(!r)return;
  r.themes=[themeName(key)];
  r.drafts=DRAFT_BY_THEME[key]||DEFAULT_DRAFTS;
- r.conf='high'; MANUAL[idx]=key; saveManual();
+ r.conf='high'; MANUAL[rid]=key; saveManual();
 }
+function findRow(rid){return D.rows.filter(function(r){return r.rid===rid})[0];}
+function flash(el,msg){
+ // never leave a click without feedback: report failures visibly
+ const n=document.createElement('div');n.className='flash';n.textContent=msg;el.appendChild(n);
+ setTimeout(function(){n.remove()},2600);}
 function dlTemplate(){
  var rows=[["platform","date","branch","text"],
    ["OpenRice","2026-11-20","Mong Kok","\u7b49\u4e86\u4e00\u500b\u9418\u624d\u6709\u6a71\u4f4d\uff0c\u670d\u52d9\u54e1\u6c92\u5f88\u597d\u5730\u9053\u6b49\u3002"]];
@@ -697,16 +736,30 @@ function addRows(raw,src){
 }
 function setFeedMsg(m){document.getElementById('feedMsg').textContent=m;}
 function renderInsight(){
- const max=Math.max(...D.themes.map(t=>t[1]));
- document.getElementById('insight').innerHTML=`
- <div class="note">${esc(fmt(t('ins_note'),{negatives:D.negatives.toLocaleString(),silent_negative:D.silent_negative.toLocaleString(),written:D.written.toLocaleString()}))}</div>
- <div class="chart"><h2>投訴原因分佈（全期）</h2>
- ${D.themes.map(([k,v])=>`<div class="bar"><span>${esc(k)}</span><div class="track"><div class="fill" style="width:${v/max*100}%"></div></div><b>${v}</b></div>`).join('')}
- <div class="cap">${esc(fmt(t('ins_cap1'),{written:D.written.toLocaleString()}))}</div></div>
- <div class="chart"><h2>投訴擱置咗幾耐</h2>
- ${(()=>{const vals=D.buckets.map(b=>b[1]);const m=Math.max(...vals)||1;
-   return D.buckets.map(b=>'<div class="bar"><span>'+esc(t(b[0]))+'</span><div class="track"><div class="fill" style="width:'+(b[1]/m*100)+'%;background:#D9822B"></div></div><b>'+b[1]+'</b></div>').join('');})()}
- <div class="cap">${esc(fmt(t('ins_cap2'),{latency:D.stats.latency_measurable.toLocaleString()}))}</div></div>`;
+ const el=document.getElementById('insight');
+ const max=Math.max.apply(null,D.themes.map(function(x){return x[1]}))||1;
+ // grouped bars: one row per theme, segments per platform — every bar shares a scale
+ const PLAT=["Google Maps","OpenRice","Threads","Xiaohongshu"];
+ const PCOL={"Google Maps":"#2F6B45","OpenRice":"#D9822B","Threads":"#4A7FB5","Xiaohongshu":"#C8102E"};
+ const cells={}; (D.cross&&D.cross.cells||[]).forEach(function(c){cells[c[0]+"|"+c[1]]=c[2]});
+ const rows=(D.cross&&D.cross.themes||[]).slice(0,8);
+ const pmax=Math.max.apply(null,[1].concat(rows.map(function(k){
+   return PLAT.reduce(function(a,p){return Math.max(a,cells[k+"|"+p]||0)},0)})));
+ el.innerHTML=''
+  +'<div class="note">'+fmt(t('ins_note'),{negatives:D.negatives.toLocaleString(),
+      silent_negative:D.silent_negative.toLocaleString(),written:D.written.toLocaleString()})+'</div>'
+  +'<div class="chart"><h2>'+esc(t('ins_reasons'))+'</h2>'
+   +D.themes.map(function(x){return '<div class="bar"><span>'+esc(x[0])+'</span>'
+     +'<div class="track"><div class="fill" style="width:'+(x[1]/max*100)+'%"></div></div><b>'+x[1]+'</b></div>'}).join('')
+  +'</div>'
+  +'<div class="chart"><h2>'+esc(t('ins_cross'))+'</h2>'
+   +'<div class="lgd">'+PLAT.map(function(p){return '<span><i style="background:'+PCOL[p]+'"></i>'+esc(srcName(p))+'</span>'}).join('')+'</div>'
+   +rows.map(function(k){
+     return '<div class="crow"><span class="cnm">'+esc(themeName(k))+'</span>'
+       +'<div class="ctrack">'+PLAT.map(function(p){var v=cells[k+"|"+p]||0;
+         return v?'<div class="cseg" style="width:'+(v/pmax*100)+'%;background:'+PCOL[p]+'" title="'+esc(srcName(p))+': '+v+'"></div>':''}).join('')
+       +'</div><b>'+PLAT.reduce(function(a,p){return a+(cells[k+"|"+p]||0)},0)+'</b></div>'}).join('')
+  +'</div>';
 }
 
 function renderMap(){
@@ -724,7 +777,6 @@ function renderMap(){
      return '<tr><td>'+esc(d.store)+'</td><td>'+d.n+'</td><td>'+d.neg+'</td>'
        +'<td><b style="color:'+colRate(d.rate)+'">'+d.rate+'%</b></td>'
        +'<td>'+esc(fmt(t('ago'),{n:d.newest}))+'</td></tr>'}).join('')+'</table>'
-   +'<div class="cap">'+esc(fmt(t('map_worst_cap')))+'</div>'
    +'<div class="cap">'+esc(fmt(t('map_unlocated'),{unlocated:D.stats.unlocated.toLocaleString(),
       pct:(D.stats.unlocated/D.stats.total*100).toFixed(1)}))+'</div></div>';
 
@@ -759,8 +811,8 @@ function applyStatic(){
  set('heroTitle',t('title'));
  set('langLabel',t('lang_label'));
  const sel=document.getElementById('langSel'); if(sel) sel.value=LANG;
- set('brandLine',t('brand'));
- set('footNote',t('footer_src'));
+
+
  set('updatedLbl',t('updated'));
 }
 const VIEWS=['home','triage','done','feed','insight','map'];let curTab=0;

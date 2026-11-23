@@ -10,39 +10,33 @@ THEME_TRAD = {
 
 TRAD = {
     "title": "顧客回饋中心",
-    "brand": "Tam Jai International · Marketing & Communications",
     "tabs": ["今日工作", "待回覆", "已處理", "匯入數據", "趨勢分析", "分店表現"],
 
-    "hero_lead": "今日有 {pending_neg} 則投訴待跟進，其中 {backlog} 則已擱置超過一週。",
-    "hero_sub": ("最長的一則已等待 {oldest_days} 日，集中於 {oldest_platform}。"
-                 "確認後，回覆内容由負責同事自行貼上平台，系統不會代公司發言。"),
+    "hero_lead": "{pending_neg} 則投訴待跟進 · {backlog} 則擱置超過一週",
+    "hero_sub": "最久 {oldest_days} 日 · 集中在 {oldest_platform}",
 
-    "m_complaints": "投訴待回覆", "m_complaints_s": "近 90 日內尚未跟進",
-    "m_overweek": "已擱置超過一週", "m_overweek_s": "最舊的一批，建議今日處理",
-    "m_crisis": "需即時轉交營運", "m_crisis_s": "食安／過敏／法律，不由系統擬稿",
-    "m_praise": "正面評價可致謝", "m_praise_s": "低成本維繫客戶關係",
+    "m_complaints": "投訴待回覆", "m_complaints_s": "",
+    "m_overweek": "已擱置超過一週", "m_overweek_s": "",
+    "m_crisis": "需即時轉交營運", "m_crisis_s": "食安／過敏／法律",
+    "m_praise": "正面評價可致謝", "m_praise_s": "",
 
     "h_by_platform": "各平台尚有幾多待回覆",
-    "median_note": ("「中位數」較「平均數」可靠：少數極舊的評論會拉高平均數。"
-                    "Threads 日數較短是由於该平台僅提供近期內容，並不代表處理速度較快。"),
     "h_hot": "本週討論重點",
-    "hot_cap": "近 90 日共有 {pending_neg} 則投訴，其中寫明原因的 {hot_total} 則方計入上表。",
-    "tip": ("<b>建議優先處理：</b>擱置超過一週的 {backlog} 則，以及 {crisis_live} 則食安相關。"
-            "前者影響品牌觀感，後者涉及合規風險。"),
+    "tip": "<b>先處理：</b>{backlog} 則擱置超過一週 · {crisis_live} 則食安",
     "waited": "中位已擱 {n} 日", "of_which": "其間投訴 {n} 則",
 
     "f_platform": "全部平台", "f_kind": "全部性質", "f_theme": "全部主題", "unclassified_option": "未分類",
     "assign": "歸類…",
     "feed_newsrc": "其他平台名稱…", "feed_addplat": "新增平台",
-    "feed_platok": "已加入平台「{n}」，現在可在下拉選單中選擇。",
+    "feed_platok": "已加入平台「{n}」",
     "feed_dupplat": "該平台已在清單中。", "feed_noplatform": "請先輸入平台名稱。",
     "add_theme": "新增主題分類", "add_theme_ask": "輸入新的主題名稱（例如：湯底濃淡、外卖灑漏）",
 
-    "f_crisis_only": "只顯示需轉營運", "f_search": "搜尋分店或關鍵字…",
+    "f_crisis_only": "只看需轉營運", "f_search": "搜尋分店或關鍵字…",
     "kind_all": "全部性質", "kind_neg": "投訴", "kind_pos": "讚好", "kind_neu": "中性",
-    "shown": "顯示 {a} / {b} 則待辦 · 本次已跟進 {c} 則",
+    "shown": "顯示 {a} / {b} · 已跟進 {c}",
 
-    "score": "優先分", "waiting": "擱置 {n} 日", "reliability": "判讀可靠度",
+    "score": "優先分", "waiting": "擱置 {n} 日", "reliability": "可靠度",
     "conf": {"high": "高", "medium": "中", "low": "低"},
     "no_store": "未有提及分店", "no_text": "（僅提供評分，未附文字）", "untagged": "未分類",
     "btn_reply": "擬稿回覆", "btn_esc": "轉交營運", "btn_mon": "繼續觀察", "btn_dis": "暫不處理",
@@ -51,59 +45,47 @@ TRAD = {
     "badge_pos": "✅ 讚好", "badge_neu": "○ 中性",
     "done_reply": "草稿已備妥，請由本人貼上平台", "done_esc": "已列入本週營運簡報",
     "done_mon": "保留於觀察名單", "done_dis": "已標記為暫不處理",
-    "demo_note": ("此演示版本不會儲存操作記錄，亦不會發布任何内容。正式系統會將每一步寫入稽核日誌，"
-                  "而最終發布仍须由負責同事在平台上自行完成。"),
+    "demo_note": "演示版不儲存內容，亦不會發布",
 
-    "ins_note": ("4,130 則投訴裡，{silent_negative} 則只打了星級沒寫原因。"
-                 "下圖統計的是有寫原因的 {written} 則——其餘的不滿確實存在，但要分店跟進才知道原因。"),
-    "ins_reasons": "投訴原因分佈（全期）",
-    "ins_cap1": "n = {written} 則附有文字的投訴 · 分類採用固定清單，因此跨月可直接比較",
-    "ins_latency": "投訴擱置時間",
-    "ins_cap2": ("僅計算 Threads 與小紅書（n = {latency}），因為這兩個平台提供的是完整近期清單。"
-                 "OpenRice 與 Google Maps 會一併返回歷史評論，若同樣納入計算，"
-                 "將把存檔記錄誤報為積壓個案。"),
+    "ins_note": "{written} 則投訴寫明了原因（另有 {silent_negative} 則只給星級）",
+    "ins_reasons": "投訴原因分佈",
+    "ins_cross": "各平台主要投訴類型",
+    "ins_latency": "投訴等待時間",
 
-    "map_h": "{branches} 間已識別位置的分店",
-    "map_unlocated": ("<b>另有 {unlocated} 則無法歸類到分店</b>（{pct}%）。"
-                      "小紅書與 Threads 的貼文常只提及「譚仔」而未說明分店，"
-                      "而全港有兩百多間門市無從判斷。這類記錄沒有被推測歸類，"
-                      "因此地圖並非完整覆蓋——閱讀數字時須留意。"),
+    "map_h": "各分店投訴比率",
+    "map_unlocated": "<b>{unlocated} 則未註明分店</b>（{pct}%），未計入地圖",
     "map_worst": "最需要關注的分店",
     "map_cols": ["分店", "評論數", "投訴", "投訴比率", "最新一則"],
-    "map_worst_cap": ("少於 10 則評論的分店不列入排行——樣本過小時，單一的差評屬噪音而非結論。"),
     "ago": "{n} 日前",
-    "legend_size": "圓越大代表評論越多", "legend_colour": "顏色越深代表投訴比率越高",
+    "legend_size": "圓越大＝評論越多", "legend_colour": "顏色越深代表投訴比率越高",
 
-    "updated": "資料更新", "footer_src": ("來源：OpenRice、小紅書、Google Maps、Threads 之公開評論。"
-                                        "系統只協助篩選與擬稿，不會代替公司對外發言；"
-                                        "所有回覆均须由負責同事本人發出。"),
+    "updated": "資料更新",
     "lang_label": "語言",
     "unit": "則",
     "all_option": "全部",
-    "done_h": "已處理", "done_empty": "本次尚無處理記錄。在「待回覆」中對某則評論執行動作後，會自動出現在這裡。",
-    "done_note": "這些項目已從待辦佇列移出。記錄儲存在此瀏覽器，重新整理不會消失。",
-    "more_than": "另有", "clear_done": "清除本次處理記錄",
+    "done_h": "已處理", "done_empty": "尚無處理記錄",
+    "more_than": "另有", "clear_done": "清除記錄",
     "clear_confirm": "確定要清除所有處理記錄？這不會影響原始數據。",
     "feed_h": "匯入新數據",
-    "feed_intro": "將新的公開評論加入待辦佇列。資料在本機解析，不會上傳到任何伺服器。",
+    "feed_intro": "新評論加入待辦佇列 · 資料在本機解析，不會上傳",
     "feed_paste": "直接貼上", "feed_file": "上傳 CSV 檔案",
-    "feed_ph": "每行一則：平台,日期,分店,內容\nOpenRice,2026-11-20,Mong Kok,等咗一個鐘先有枱…",
+    "feed_ph": "每行一則：平台,日期,分店,內容\nOpenRice,2026-11-20,Mong Kok,等候一小時才排位…",
     "feed_go": "加入佇列", "feed_tpl": "下載 CSV 範本",
-    "feed_ok": "已加入 {n} 則評論至待辦佇列。", "feed_none": "未識別到有效行。請確認格式為：平台,日期,分店,內容",
+    "feed_ok": "已加入 {n} 則", "feed_none": "未識別到有效行。請確認格式為：平台,日期,分店,內容",
     "feed_empty": "請先貼上內容或選擇檔案。", "feed_nofile": "請選擇一個 CSV 檔案。",
-    "feed_note": "格式：平台,日期(YYYY-MM-DD),分店名稱,評論內容。第一行可為標題，會被自動忽略。",
+    "feed_note": "格式：平台,日期,分店,內容（首行標題會自動忽略）",
 
     "brand_short": "譚仔",
     "draft_title": "建議回覆（兩種語氣）",
-    "draft_rules": "依據品牌語氣規則生成 · 涉及主題：{n}",
+    "draft_rules": "主題：{n}",
     "v_warm": "親切口語", "v_formal": "正式書面",
     "copy": "複製", "copied": "已複製 ✓", "copy_fail": "請手動選取複製",
-    "draft_hint": "系統不會代你發布。複製後請由你本人貼上該平台，並回到本頁記錄發出時間。",
-    "map_note": "圓形上的數字＝該地點的公開評論數；顏色由綠至紅代表投訴比率。可拖曳與縮放查看個別門市。",
-    "map_offline": "地圖底圖需要網路才能載入。目前離線，其餘功能不受影響。",
+    "draft_hint": "複製後由你本人貼上平台",
+    "map_note": "數字＝評論數 · 顏色＝投訴比率",
+    "map_offline": "地圖需聯網載入，其餘不受影響",
     "legend_size": "圓越大＝評論越多",
 
-    "map_h": "{branches} 間已識別位置的分店",
+    "map_h": "各分店投訴比率",
     "vm_compact": "緊湊", "vm_card": "卡片", "vm_table": "表格",
     "cols": ["平台", "分店", "日期", "優先分", "擱置日", "性質", "內容"],
 
@@ -113,22 +95,15 @@ TRAD = {
 EN = {
     "title": "Customer Feedback Centre",
     "tabs": ["Today's Work", "Awaiting Reply", "Handled", "Import Data", "Trends", "Branch Performance"],
-    "hero_lead": "{pending_neg} complaints are awaiting reply; {backlog} have been open over a week.",
-    "hero_sub": ("The oldest has waited {oldest_days} days, concentrated on {oldest_platform}. "
-                 "Once approved, replies are posted by the responsible colleague — the system never "
-                 "speaks for the company."),
-    "m_complaints": "Complaints open", "m_complaints_s": "Within the last 90 days",
-    "m_overweek": "Waiting over a week", "m_overweek_s": "Oldest first",
+    "hero_lead": "{pending_neg} complaints open · {backlog} waiting over a week",
+    "hero_sub": "Oldest {oldest_days} days · mostly {oldest_platform}",
+    "m_complaints": "Complaints open", "m_complaints_s": "",
+    "m_overweek": "Waiting over a week", "m_overweek_s": "",
     "m_crisis": "Needs Operations now", "m_crisis_s": "Food safety, allergy or legal — never drafted",
-    "m_praise": "Praise to acknowledge", "m_praise_s": "Low-cost goodwill",
+    "m_praise": "Praise to acknowledge", "m_praise_s": "",
     "h_by_platform": "Open items by platform",
-    "median_note": ("Median rather than mean: a handful of very old reviews pull the average up. "
-                    "Threads shows fewer days because the platform only surfaces recent content — "
-                    "it does not mean we respond faster."),
     "h_hot": "This week's themes",
-    "hot_cap": "{pending_neg} complaints in the last 90 days; {hot_total} stated a reason and appear above.",
-    "tip": ("<b>Suggested priority:</b> the {backlog} items open over a week, plus {crisis_live} "
-            "food-safety cases. The first affects perception, the second compliance."),
+    "tip": "<b>Priority:</b> {backlog} open over a week · {crisis_live} food-safety",
     "waited": "Median wait {n} days", "of_which": "{n} complaints among them",
     "f_platform": "All platforms", "f_kind": "All types", "f_theme": "All themes", "unclassified_option": "Uncategorised",
     "assign": "Categorise…",
@@ -149,35 +124,23 @@ EN = {
     "badge_pos": "✅ Praise", "badge_neu": "○ Neutral",
     "done_reply": "Draft ready — post it yourself", "done_esc": "Added to this week's Operations brief",
     "done_mon": "Kept on watch list", "done_dis": "Marked as not acting",
-    "demo_note": ("This demo stores nothing and publishes nothing. In production every step is written "
-                  "to an audit log, and publishing still happens by hand on the platform."),
-    "ins_note": ("Of {negatives} complaints overall, <b>{silent_negative} gave one or two stars with no words</b>. "
-                 "The reasons below cover only those who wrote something (n = {written}); the rest is real "
-                 "dissatisfaction whose cause needs branch follow-up."),
-    "ins_reasons": "Stated reasons across all periods",
-    "ins_cap1": "n = {written} complaints carrying text · fixed categories, so months compare directly",
-    "ins_latency": "How long complaints have waited",
-    "ins_cap2": ("Counted only for Threads and Xiaohongshu (n = {latency}), which return complete recent lists. "
-                 "OpenRice and Google Maps also return history; including them would report archives as backlog."),
-    "map_h": "{branches} branches with an identified location",
-    "map_unlocated": ("<b>{unlocated} posts could not be attributed to a branch</b> ({pct}%). "
-                      "Xiaohongshu and Threads often say only \"Tam Jai\" without naming a store, out of "
-                      "roughly 219 outlets. These were not guessed onto the map, so coverage is partial."),
+    "demo_note": "Demo only: nothing stored, nothing published",
+    "ins_note": "{written} complaints stated a reason ({silent_negative} were star-only)",
+    "ins_reasons": "Stated complaint reasons",
+    "ins_cross": "Main complaint types by platform",
+    "ins_latency": "Complaint waiting time",
+    "map_h": "Complaint rate by branch",
+    "map_unlocated": "<b>{unlocated} posts name no branch</b> ({pct}%), excluded from the map",
     "map_worst": "Branches needing attention",
     "map_cols": ["Branch", "Reviews", "Complaints", "Complaint rate", "Latest"],
-    "map_worst_cap": "Branches under 10 reviews are excluded — one bad review at n=3 is noise, not a finding.",
     "ago": "{n} days ago",
     "legend_size": "Larger circle = more reviews", "legend_colour": "Darker = higher complaint rate",
     "updated": "Data updated",
-    "footer_src": ("Public comments from OpenRice, Xiaohongshu, Google Maps and Threads. "
-                   "The system assists with triage and drafting; it never speaks for the company."),
     "lang_label": "Language",
-    "brand": "Tam Jai International \u00b7 Marketing & Communications",
     "kind_all": "All types",
     "unit": "posts",
     "all_option": "All",
     "done_h": "Handled", "done_empty": "Nothing actioned yet. Items you act on in Awaiting Reply appear here.",
-    "done_note": "These have left the pending queue. Records live in this browser and survive a reload.",
     "more_than": "Plus another", "clear_done": "Clear this session's log",
     "clear_confirm": "Clear all handling records? Original data is unaffected.",
     "feed_h": "Import new data",
@@ -194,12 +157,12 @@ EN = {
     "draft_rules": "Generated from brand-voice rules · themes: {n}",
     "v_warm": "Warm / conversational", "v_formal": "Formal / written",
     "copy": "Copy", "copied": "Copied ✓", "copy_fail": "Select and copy manually",
-    "draft_hint": "Nothing is posted for you. Copy the text, post it yourself on the platform, then log the time here.",
-    "map_note": "Numbers on each circle are that location's public reviews; colour runs green to red with complaint rate. Drag and zoom freely.",
+    "draft_hint": "Copy it, then post it yourself",
+    "map_note": "Number = reviews · colour = complaint rate",
     "map_offline": "Map tiles need a network connection. Other sections are unaffected.",
     "legend_size": "Larger circle = more reviews",
 
-    "map_h": "{branches} branches with an identified location",
+    "map_h": "Complaint rate by branch",
     "vm_compact": "Compact", "vm_card": "Cards", "vm_table": "Table",
     "cols": ["Platform", "Branch", "Date", "Priority", "Days open", "Type", "Text"],
     "b1": "Within a week", "b2": "One to four weeks", "b3": "One to three months",
