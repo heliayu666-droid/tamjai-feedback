@@ -175,6 +175,7 @@ def prepare():
                  pr=round(float(r.priority),1), days=int(r.days), conf=r.confidence,
                  url=r.url if isinstance(r.url,str) else "",
                  drafts=_draft_for(list(r.themes)),
+                 theme_keys=[str(x) for x in r.themes if isinstance(str(x), str)],
                  rid=f"r{idx}") for idx, (_, r) in enumerate(pool.iterrows())]
 
     # ---- the four numbers a communications manager actually works against
@@ -201,7 +202,7 @@ def prepare():
     neg_all = df[df.relevant & (df.sentiment=="negative")]
     written = neg_all[neg_all.text.str.strip().str.len()>=5]
     tc = Counter(t for ts in written.themes for t in ts if t!="other")
-    themes = sorted(([TZ[k],v] for k,v in tc.items()), key=lambda x:-x[1])[:9]
+    themes = sorted(([k, v] for k, v in tc.items()), key=lambda x: -x[1])[:9]  # keys, translated client-side
     meas = df[df.latency_measurable & df.relevant & (df.sentiment=="negative")]
     return dict(stats=stats, rows=rows, branches=branches, themes=themes,
                 unnamed_outlets=int(df.store.map(is_generic).sum()),
@@ -401,7 +402,8 @@ const log=JSON.parse(localStorage.getItem("tj_log")||"{}");
 let MANUAL=JSON.parse(localStorage.getItem("tj_manual")||"{}");
 // restore manual categories by rid so a reloaded page keeps them
 Object.keys(MANUAL).forEach(function(rid){var r=findRow(rid);
- if(r&&MANUAL[rid]){r.themes=[themeName(MANUAL[rid])];r.drafts=DRAFT_BY_THEME[MANUAL[rid]]||r.drafts;r.conf='high';}});
+ if(r&&MANUAL[rid]){r.theme_keys=[MANUAL[rid]];r.themes=[themeName(MANUAL[rid])];
+   r.drafts=DRAFT_BY_THEME[MANUAL[rid]]||r.drafts;r.conf='high';}});
 function saveLog(){localStorage.setItem("tj_log",JSON.stringify(log));}
 
 function kpi(n,l){return `<div class="kpi"><b>${n}</b><span>${l}</span></div>`}
@@ -490,7 +492,7 @@ function apply(){
  const out=D.rows.filter(function(r,idx){
    if(done[r.rid])return false;
    return (!sel||r.src===sel) && (!kind||r.senti===kind)
-     && (!th||(th==='__none'?r.themes.length===0:r.themes.indexOf(th)>=0))
+     && (!th||(th==='__none'?r.themes.length===0:(r.theme_keys||[]).indexOf(th)>=0))
      && (!onlyC||r.crisis)
      && (!q||(String(r.text)+String(r.store)).toLowerCase().indexOf(q)>=0);
  });
@@ -502,7 +504,9 @@ function renderTriage(list){
  if(!list){var dn={};Object.keys(log).forEach(function(k){dn[k.split(':')[0]]='1'});
    list=D.rows.filter(function(r){return !dn[r.rid]});}
  const srcs=[]; D.rows.forEach(function(r){if(srcs.indexOf(r.src)<0)srcs.push(r.src);});
- const ths=[]; D.rows.forEach(function(r){r.themes.forEach(function(x){if(ths.indexOf(x)<0)ths.push(x)})});
+ // collect theme KEYS (not the stored display names) so the menu localises with the page
+ const thKeys={}; D.rows.forEach(function(r){(r.theme_keys||[]).forEach(function(k){thKeys[k]=1})});
+ const ths=Object.keys(thKeys);
  const el=document.getElementById('triage');
  el.innerHTML=''
   +'<div class="filters">'
@@ -514,7 +518,7 @@ function renderTriage(list){
       +'<option value="neutral">'+esc(t('kind_neu'))+'</option></select>'
     +'<select id="fT"><option value="">'+esc(t('f_theme'))+'</option>'
       +'<option value="__none">'+esc(t('unclassified_option'))+'</option>'
-      +ths.map(function(x){return '<option>'+esc(x)+'</option>'}).join('')+'</select>'
+      +ths.map(function(x){return '<option value="'+esc(x)+'">'+esc(themeName(x))+'</option>'}).join('')+'</select>'
     +'<label style="align-self:center;font-size:13px"><input type="checkbox" id="fC"> '
       +esc(t('f_crisis_only'))+'</label>'
     +'<input type="search" id="fQ" placeholder="'+esc(t('f_search'))+'" style="flex:1;min-width:150px">'
@@ -692,7 +696,7 @@ function addThemePrompt(i){
 }
 function applyThemeToRow(rid,key){
  const r=findRow(rid); if(!r)return;
- r.themes=[themeName(key)];
+ r.theme_keys=[key]; r.themes=[themeName(key)];
  r.drafts=DRAFT_BY_THEME[key]||DEFAULT_DRAFTS;
  r.conf='high'; MANUAL[rid]=key; saveManual();
 }
@@ -749,7 +753,7 @@ function renderInsight(){
   +'<div class="note">'+fmt(t('ins_note'),{negatives:D.negatives.toLocaleString(),
       silent_negative:D.silent_negative.toLocaleString(),written:D.written.toLocaleString()})+'</div>'
   +'<div class="chart"><h2>'+esc(t('ins_reasons'))+'</h2>'
-   +D.themes.map(function(x){return '<div class="bar"><span>'+esc(x[0])+'</span>'
+   +D.themes.map(function(x){return '<div class="bar"><span>'+esc(themeName(x[0]))+'</span>'
      +'<div class="track"><div class="fill" style="width:'+(x[1]/max*100)+'%"></div></div><b>'+x[1]+'</b></div>'}).join('')
   +'</div>'
   +'<div class="chart"><h2>'+esc(t('ins_cross'))+'</h2>'
@@ -777,8 +781,8 @@ function renderMap(){
      return '<tr><td>'+esc(d.store)+'</td><td>'+d.n+'</td><td>'+d.neg+'</td>'
        +'<td><b style="color:'+colRate(d.rate)+'">'+d.rate+'%</b></td>'
        +'<td>'+esc(fmt(t('ago'),{n:d.newest}))+'</td></tr>'}).join('')+'</table>'
-   +'<div class="cap">'+esc(fmt(t('map_unlocated'),{unlocated:D.stats.unlocated.toLocaleString(),
-      pct:(D.stats.unlocated/D.stats.total*100).toFixed(1)}))+'</div></div>';
+   +'<div class="cap">'+fmt(t('map_unlocated'),{unlocated:D.stats.unlocated.toLocaleString(),
+      pct:(D.stats.unlocated/D.stats.total*100).toFixed(1)})+'</div></div>';
 
  if(typeof L==="undefined"){document.getElementById('leaflet').innerHTML='<div class="offnote">'
    +esc(t('map_offline'))+'</div>';return;}

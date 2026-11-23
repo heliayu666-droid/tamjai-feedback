@@ -99,7 +99,7 @@ EN = {
     "hero_sub": "Oldest {oldest_days} days · mostly {oldest_platform}",
     "m_complaints": "Complaints open", "m_complaints_s": "",
     "m_overweek": "Waiting over a week", "m_overweek_s": "",
-    "m_crisis": "Needs Operations now", "m_crisis_s": "Food safety, allergy or legal — never drafted",
+    "m_crisis": "Needs Operations now", "m_crisis_s": "Food safety, allergy or legal",
     "m_praise": "Praise to acknowledge", "m_praise_s": "",
     "h_by_platform": "Open items by platform",
     "h_hot": "This week's themes",

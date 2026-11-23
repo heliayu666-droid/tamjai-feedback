@@ -285,7 +285,7 @@ LANGS = {
   "m_overweek": "Waiting over a week",
   "m_overweek_s": "",
   "m_crisis": "Needs Operations now",
-  "m_crisis_s": "Food safety, allergy or legal — never drafted",
+  "m_crisis_s": "Food safety, allergy or legal",
   "m_praise": "Praise to acknowledge",
   "m_praise_s": "",
   "h_by_platform": "Open items by platform",
